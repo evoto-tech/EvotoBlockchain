@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using Blockchain.Properties;
 
 namespace Blockchain
 {
@@ -9,8 +10,10 @@ namespace Blockchain
     {
         public static void CreateBlockchain(string blockchainName)
         {
-            var datadir = MultiChainHandler.GetAppDataFolder();
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "multichain-util.exe");
+            var evotoDir = MultiChainHandler.GetAppDataFolder();
+            var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
+
+            MultiChainHandler.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
 
             Debug.WriteLine($"Creating MultiChain: {blockchainName}");
             try
@@ -26,8 +29,8 @@ namespace Blockchain
                         CreateNoWindow = true,
 
                         // Setup executable and parameters
-                        FileName = path,
-                        Arguments = $"-datadir={datadir}"
+                        FileName = multichainUtilPath,
+                        Arguments = $"-datadir={evotoDir}"
                     }
                 };
 

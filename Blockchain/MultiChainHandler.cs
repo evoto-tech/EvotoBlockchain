@@ -112,16 +112,7 @@ namespace Blockchain
             var evotoDir = GetAppDataFolder();
             var multichainDPath = Path.Combine(evotoDir, "multichaind.exe");
 
-            try
-            {
-                var file = Resources.multichaind;
-                if (!File.Exists(multichainDPath)) File.WriteAllBytes(multichainDPath, file);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-            }
-
+            EnsureFileExists(multichainDPath, Resources.multichaind);
 
             // TODO: Bug with multichain, have to delete existing chain directory
             var chainDir = Path.Combine(evotoDir, ChainName);
@@ -169,6 +160,19 @@ namespace Blockchain
             catch (Exception e)
             {
                 throw new WarningException(e.Message);
+            }
+        }
+
+        public static void EnsureFileExists(string filePath, byte[] file)
+        {
+            try
+            {
+                if (!File.Exists(filePath)) File.WriteAllBytes(filePath, file);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Couldn't get file: {filePath}");
+                Debug.WriteLine(e);
             }
         }
 
