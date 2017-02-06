@@ -1,14 +1,16 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
+using Blockchain.Exceptions;
 using Blockchain.Properties;
 
 namespace Blockchain
 {
-    public class MultiChainUtilHandler
+    public static class MultiChainUtilHandler
     {
-        public static void CreateBlockchain(string blockchainName)
+        public static async Task CreateBlockchain(string blockchainName)
         {
             var evotoDir = MultiChainHandler.GetAppDataFolder();
             var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
@@ -16,38 +18,63 @@ namespace Blockchain
             MultiChainHandler.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
 
             Debug.WriteLine($"Creating MultiChain: {blockchainName}");
-            try
+
+            var process = new Process
             {
-                var process = new Process
+                StartInfo =
                 {
-                    StartInfo =
-                    {
-                        // Stop the process from opening a new window
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
+                    // Stop the process from opening a new window
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
 
-                        // Setup executable and parameters
-                        FileName = multichainUtilPath,
-                        Arguments = $"-datadir={evotoDir}"
-                    }
-                };
+                    // Setup executable and parameters
+                    FileName = multichainUtilPath,
+                    Arguments = $"-datadir={evotoDir} create {blockchainName}"
+                }
+            };
 
-                process.OutputDataReceived += (sender, args) => { Debug.WriteLine($"Multichain-util: {args.Data}"); };
-                process.ErrorDataReceived +=
-                    (sender, args) => { Debug.WriteLine($"Multichain-util Error: {args.Data}"); };
-
-                // Go
-                var success = process.Start();
-
-                if (!success)
-                    throw new SystemException();
-            }
-            catch (Exception e)
+            var outputQueue = new Queue<string>();
+            var errQueue = new Queue<string>();
+            process.OutputDataReceived += (sender, args) =>
             {
-                throw new WarningException(e.Message);
+                if (string.IsNullOrWhiteSpace(args.Data)) return;
+                Debug.WriteLine($"Multichain-util: {args.Data}");
+                outputQueue.Enqueue(args.Data);
+            };
+            process.ErrorDataReceived += (sender, args) =>
+            {
+                if (string.IsNullOrWhiteSpace(args.Data)) return;
+                Debug.WriteLine($"Multichain-util Error: {args.Data}");
+                errQueue.Enqueue(args.Data);
+            };
+
+            // Go
+            var success = process.Start();
+
+            if (!success)
+                throw new CouldNotCreateBlockchainException("Could not start process");
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            // Wait for process to end
+            var count = 1;
+            while (!process.HasExited)
+            {
+                // 10s
+                if (count++ > 100)
+                {
+                    process.Kill();
+                    throw new CouldNotCreateBlockchainException("Process hung");
+                }
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
+
+            // TODO: Read output?
+            if (errQueue.Count > 0)
+                throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
         }
     }
 }

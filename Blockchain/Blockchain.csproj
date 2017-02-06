@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\CouldNotCreateBlockchainException.cs" />
     <Compile Include="IMultiChainHandler.cs" />
     <Compile Include="MultiChainUtilHandler.cs" />
     <Compile Include="MultiChainHandler.cs" />

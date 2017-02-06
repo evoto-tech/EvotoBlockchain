@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -96,6 +95,7 @@ namespace Blockchain
 
         private static async Task WatchProcess(object sender, DataReceivedEventArgs e, Func<Task> successCallback)
         {
+            if (string.IsNullOrWhiteSpace(e.Data)) return;
             Debug.WriteLine($"Multichaind: {e.Data}");
             if (e.Data.Contains("Node started"))
                 await successCallback();
@@ -121,46 +121,40 @@ namespace Blockchain
                 Directory.Delete(chainDir, true);
 
             Debug.WriteLine("Starting MultiChain");
-            try
+            _process = new Process
             {
-                _process = new Process
+                StartInfo =
                 {
-                    StartInfo =
-                    {
-                        // Stop the process from opening a new window
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
+                    // Stop the process from opening a new window
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
 
-                        // Setup executable and parameters
-                        FileName = multichainDPath,
-                        Arguments =
-                            $"{ChainName}@{ChainHost}:{ChainPort} -daemon -datadir={evotoDir} -server -rpcuser={RpcUser} -rpcpassword={_password} -rpcport={RpcPort}"
-                    }
-                };
+                    // Setup executable and parameters
+                    FileName = multichainDPath,
+                    Arguments =
+                        $"{ChainName}@{ChainHost}:{ChainPort} -daemon -datadir={evotoDir} -server -rpcuser={RpcUser} -rpcpassword={_password} -rpcport={RpcPort}"
+                }
+            };
 
-                Debug.WriteLine(_process.StartInfo.Arguments);
-
-                _process.ErrorDataReceived +=
-                    (sender, args) => { Debug.WriteLine($"Multichaind Error: {args.Data}"); };
-                _process.OutputDataReceived += async (sender, e) => await WatchProcess(sender, e, successCallback);
-
-                // Go
-                var success = _process.Start();
-
-                if (!success)
-                    throw new SystemException();
-
-                _process.BeginOutputReadLine();
-                _process.BeginErrorReadLine();
-
-                await successCallback();
-            }
-            catch (Exception e)
+            _process.ErrorDataReceived += (sender, args) =>
             {
-                throw new WarningException(e.Message);
-            }
+                if (string.IsNullOrWhiteSpace(args.Data)) return;
+                Debug.WriteLine($"Multichaind Error: {args.Data}");
+            };
+            _process.OutputDataReceived += async (sender, e) => await WatchProcess(sender, e, successCallback);
+
+            // Go
+            var success = _process.Start();
+
+            if (!success)
+                throw new SystemException();
+
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
+
+            await successCallback();
         }
 
         public static void EnsureFileExists(string filePath, byte[] file)
