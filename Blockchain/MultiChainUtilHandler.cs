@@ -14,6 +14,7 @@ namespace Blockchain
         {
             var evotoDir = MultiChainHandler.GetAppDataFolder();
             var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
+            var taskCompletion = new TaskCompletionSource<bool>();
 
             MultiChainHandler.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
 
@@ -51,6 +52,13 @@ namespace Blockchain
             };
 
             // Go
+            process.EnableRaisingEvents = true;
+            process.Exited += new EventHandler((object sender, EventArgs e) =>
+            {
+                if (errQueue.Count > 0)
+                    throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
+                taskCompletion.SetResult(true);
+            });
             var success = process.Start();
 
             if (!success)
@@ -58,23 +66,14 @@ namespace Blockchain
 
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-
             // Wait for process to end
-            var count = 1;
-            while (!process.HasExited)
+            if (!process.WaitForExit(10000))
             {
-                // 10s
-                if (count++ > 100)
-                {
-                    process.Kill();
-                    throw new CouldNotCreateBlockchainException("Process hung");
-                }
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                process.Kill();
+                throw new CouldNotCreateBlockchainException("Process timed out");
             }
 
-            // TODO: Read output?
-            if (errQueue.Count > 0)
-                throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
+            await taskCompletion.Task;
         }
     }
 }
