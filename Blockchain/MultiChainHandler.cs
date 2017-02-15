@@ -157,8 +157,6 @@ namespace Blockchain
 
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
-
-            await successCallback(chainName);
         }
 
         public static void EnsureFileExists(string filePath, byte[] file)
