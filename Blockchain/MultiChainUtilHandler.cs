@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,11 +11,11 @@ namespace Blockchain
     {
         public static async Task CreateBlockchain(string blockchainName)
         {
-            var evotoDir = MultiChainHandler.GetAppDataFolder();
+            var evotoDir = MultichainTools.GetAppDataFolder();
             var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
             var taskCompletion = new TaskCompletionSource<bool>();
 
-            MultiChainHandler.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
+            MultichainTools.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
 
             Debug.WriteLine($"Creating MultiChain: {blockchainName}");
 
@@ -53,12 +52,12 @@ namespace Blockchain
 
             // Go
             process.EnableRaisingEvents = true;
-            process.Exited += new EventHandler((object sender, EventArgs e) =>
+            process.Exited += (sender, e) =>
             {
                 if (errQueue.Count > 0)
                     throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
                 taskCompletion.SetResult(true);
-            });
+            };
             var success = process.Start();
 
             if (!success)
