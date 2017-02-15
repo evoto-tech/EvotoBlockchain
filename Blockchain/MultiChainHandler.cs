@@ -10,9 +10,8 @@ namespace Blockchain
 {
     public class MultiChainHandler : IMultiChainHandler
     {
-        private const string ChainHost = "michaelfiford.com";
+        private readonly string ChainHost;
         private const int ChainPort = 7211;
-        private const string ChainName = "chain2";
         private const string RpcUser = "evoto";
         private const int RpcPort = 24533;
 
@@ -22,6 +21,11 @@ namespace Blockchain
         private bool _connected;
         private Process _process;
         public event EventHandler<EventArgs> OnConnect;
+
+        public MultiChainHandler(string hostname)
+        {
+            ChainHost = hostname;
+        }
 
         public bool Connected
         {
@@ -34,13 +38,13 @@ namespace Blockchain
             }
         }
 
-        public async Task Connect()
+        public async Task Connect(string blockchain)
         {
             try
             {
                 await Task.Factory.StartNew(async () =>
                 {
-                    await RunDaemon(ConnectRpc);
+                    await RunDaemon(blockchain, ConnectRpc);
                     Close();
                 });
             }
@@ -71,9 +75,9 @@ namespace Blockchain
                 .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
 
-        private async Task ConnectRpc()
+        private async Task ConnectRpc(string chainName)
         {
-            _client = new MultiChainClient("127.0.0.1", RpcPort, false, RpcUser, _password, ChainName);
+            _client = new MultiChainClient("127.0.0.1", RpcPort, false, RpcUser, _password, chainName);
 
             Debug.WriteLine("Attempting to connect to MultiChain using RPC");
 
@@ -93,21 +97,21 @@ namespace Blockchain
             }
         }
 
-        private static async Task WatchProcess(object sender, DataReceivedEventArgs e, Func<Task> successCallback)
+        private static async Task WatchProcess(string chainName, DataReceivedEventArgs e, Func<string, Task> successCallback)
         {
             if (string.IsNullOrWhiteSpace(e.Data)) return;
             Debug.WriteLine($"Multichaind: {e.Data}");
             if (e.Data.Contains("Node started"))
-                await successCallback();
+                await successCallback(chainName);
         }
 
-        private async Task RunDaemon(Func<Task> successCallback)
+        private async Task RunDaemon(string chainName, Func<string, Task> successCallback)
         {
             if (_process != null)
                 if (_process.HasExited)
                     Debug.WriteLine("Restarting Multichain!!");
                 else
-                    await successCallback();
+                    await successCallback(chainName);
 
             var evotoDir = GetAppDataFolder();
             var multichainDPath = Path.Combine(evotoDir, "multichaind.exe");
@@ -115,7 +119,7 @@ namespace Blockchain
             EnsureFileExists(multichainDPath, Resources.multichaind);
 
             // TODO: Bug with multichain, have to delete existing chain directory
-            var chainDir = Path.Combine(evotoDir, ChainName);
+            var chainDir = Path.Combine(evotoDir, chainName);
 
             if (Directory.Exists(chainDir))
                 Directory.Delete(chainDir, true);
@@ -134,7 +138,7 @@ namespace Blockchain
                     // Setup executable and parameters
                     FileName = multichainDPath,
                     Arguments =
-                        $"{ChainName}@{ChainHost}:{ChainPort} -daemon -datadir={evotoDir} -server -rpcuser={RpcUser} -rpcpassword={_password} -rpcport={RpcPort}"
+                        $"{chainName}@{ChainHost}:{ChainPort} -daemon -datadir={evotoDir} -server -rpcuser={RpcUser} -rpcpassword={_password} -rpcport={RpcPort}"
                 }
             };
 
@@ -143,7 +147,7 @@ namespace Blockchain
                 if (string.IsNullOrWhiteSpace(args.Data)) return;
                 Debug.WriteLine($"Multichaind Error: {args.Data}");
             };
-            _process.OutputDataReceived += async (sender, e) => await WatchProcess(sender, e, successCallback);
+            _process.OutputDataReceived += async (sender, e) => await WatchProcess(chainName, e, successCallback);
 
             // Go
             var success = _process.Start();
@@ -154,7 +158,7 @@ namespace Blockchain
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
 
-            await successCallback();
+            await successCallback(chainName);
         }
 
         public static void EnsureFileExists(string filePath, byte[] file)

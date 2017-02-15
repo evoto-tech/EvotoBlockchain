@@ -7,7 +7,7 @@ namespace Blockchain
     {
         bool Connected { get; }
         event EventHandler<EventArgs> OnConnect;
-        Task Connect();
+        Task Connect(string chainName);
         void DisconnectAndClose();
         void Close();
     }
