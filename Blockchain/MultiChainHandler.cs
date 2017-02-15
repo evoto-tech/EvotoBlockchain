@@ -38,15 +38,11 @@ namespace Blockchain
             }
         }
 
-        public async Task Connect(string blockchain)
+        public async Task Connect(string blockchain, bool clean = true)
         {
             try
             {
-                await Task.Factory.StartNew(async () =>
-                {
-                    await RunDaemon(blockchain, ConnectRpc);
-                    Close();
-                });
+                await RunDaemon(blockchain, clean, ConnectRpc);
             }
             catch (Exception e)
             {
@@ -105,7 +101,7 @@ namespace Blockchain
                 await successCallback(chainName);
         }
 
-        private async Task RunDaemon(string chainName, Func<string, Task> successCallback)
+        private async Task RunDaemon(string chainName, bool clean, Func<string, Task> successCallback)
         {
             if (_process != null)
                 if (_process.HasExited)
@@ -118,11 +114,14 @@ namespace Blockchain
 
             EnsureFileExists(multichainDPath, Resources.multichaind);
 
-            // TODO: Bug with multichain, have to delete existing chain directory
-            var chainDir = Path.Combine(evotoDir, chainName);
+            if (clean)
+            {
+                // TODO: Bug with multichain, have to delete existing chain directory
+                var chainDir = Path.Combine(evotoDir, chainName);
 
-            if (Directory.Exists(chainDir))
-                Directory.Delete(chainDir, true);
+                if (Directory.Exists(chainDir))
+                    Directory.Delete(chainDir, true);
+            }
 
             Debug.WriteLine("Starting MultiChain");
             _process = new Process
