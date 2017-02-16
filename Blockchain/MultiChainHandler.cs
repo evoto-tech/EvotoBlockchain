@@ -122,13 +122,10 @@ namespace Blockchain
         ///     Disconnects from a blockchain (RPC) and stops the associated daemon
         /// </summary>
         /// <param name="chain">Blockchain details</param>
-        public void DisconnectAndClose(MultichainModel chain)
+        public async Task DisconnectAndClose(MultichainModel chain)
         {
-            Task.Factory.StartNew(async () =>
-            {
-                await chain.DisconnectRpc();
-                StopDaemon(chain);
-            });
+            await chain.DisconnectRpc();
+            StopDaemon(chain);
         }
 
         /// <summary>
