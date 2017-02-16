@@ -50,6 +50,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="PortTypeUtilsTests.cs" />
+    <Compile Include="MultiChainToolsTests.cs" />
     <Compile Include="MultiChainUtilHandlerTests.cs" />
     <Compile Include="MultiChainHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -43,8 +43,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
+    <Compile Include="Models\EPortType.cs" />
+    <Compile Include="Models\MultichainModel.cs" />
+    <Compile Include="MultiChainTools.cs" />
     <Compile Include="Exceptions\CouldNotCreateBlockchainException.cs" />
-    <Compile Include="IMultiChainHandler.cs" />
     <Compile Include="MultiChainUtilHandler.cs" />
     <Compile Include="MultiChainHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,130 +1,86 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using Blockchain.Exceptions;
+using Blockchain.Models;
 using Blockchain.Properties;
-using MultiChainLib;
 
 namespace Blockchain
 {
-    public class MultiChainHandler : IMultiChainHandler
+    public class MultiChainHandler
     {
-        private readonly string ChainHost;
-        private const int ChainPort = 7211;
         private const string RpcUser = "evoto";
-        private const int RpcPort = 24533;
 
-        private static readonly Random Random = new Random();
-        private readonly string _password = RandomString(10);
-        private MultiChainClient _client;
-        private bool _connected;
-        private Process _process;
+        public Dictionary<string, MultichainModel> Connections { get; } = new Dictionary<string, MultichainModel>();
+
         public event EventHandler<EventArgs> OnConnect;
 
-        public MultiChainHandler(string hostname)
-        {
-            ChainHost = hostname;
-        }
+        /*****************************************************************************************/
 
-        public bool Connected
+        /// <summary>
+        ///     Connect to a blockchain
+        /// </summary>
+        /// <param name="hostname">Blockchain host</param>
+        /// <param name="blockchain">Blockchain name</param>
+        /// <param name="port">Blockchain port</param>
+        /// <param name="clean">Should clean local blockchain directory?</param>
+        /// <returns></returns>
+        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, bool clean = true)
         {
-            get { return _connected; }
-            private set
+            MultichainModel chain;
+            if (!Connections.TryGetValue(blockchain, out chain))
             {
-                if (value)
-                    OnConnect?.Invoke(this, null);
-                _connected = value;
+                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString());
+                Connections[blockchain] = chain;
             }
+
+            return await RunDaemon(chain, clean, ConnectRpc);
         }
 
-        public async Task Connect(string blockchain, bool clean = true)
+        /// <summary>
+        ///     Runs multichaind in a background process, connecting to a specified blockchain.
+        ///     Optionally callsback on successful launch, determined by multichaind's stdout/err.
+        /// </summary>
+        /// <param name="chain">Blockchain connection/status data</param>
+        /// <param name="clean">Should clean local blockchain directory?</param>
+        /// <param name="successCallback">Callsback on successful launch</param>
+        /// <returns>Blockchain connection/status data</returns>
+        private static async Task<MultichainModel> RunDaemon(MultichainModel chain, bool clean,
+            Func<MultichainModel, Task> successCallback = null)
         {
-            try
+            if (chain.Process == null)
             {
-                await RunDaemon(blockchain, clean, ConnectRpc);
+                // First time the blockchain is being connected to, need to find a port to host RPC
+                chain.RpcPort = MultiChainTools.GetNewPort(EPortType.Rpc);
             }
-            catch (Exception e)
+            else if (chain.Process.HasExited)
             {
-                Debug.WriteLine(e.Message);
+                Debug.WriteLine($"Restarting Multichaind for chain: {chain.Name}!!");
             }
-        }
-
-        public void DisconnectAndClose()
-        {
-            Task.Factory.StartNew(async () =>
+            else
             {
-                await Disconnect();
-                Close();
-            });
-        }
-
-        public void Close()
-        {
-            StopDaemon();
-        }
-
-        private static string RandomString(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[Random.Next(s.Length)]).ToArray());
-        }
-
-        private async Task ConnectRpc(string chainName)
-        {
-            _client = new MultiChainClient("127.0.0.1", RpcPort, false, RpcUser, _password, chainName);
-
-            Debug.WriteLine("Attempting to connect to MultiChain using RPC");
-
-            try
-            {
-                var info = await _client.GetInfoAsync();
-
-                Debug.WriteLine($"Connected to {info.Result.ChainName}!");
-
-                Connected = true;
+                if (successCallback != null)
+                    await successCallback(chain);
+                return chain;
             }
-            catch (InvalidOperationException e)
-            {
-                Debug.WriteLine("Could not connect to MultiChain via RPC");
-                Debug.WriteLine(e.Message);
-                Connected = false;
-            }
-        }
 
-        private static async Task WatchProcess(string chainName, DataReceivedEventArgs e, Func<string, Task> successCallback)
-        {
-            if (string.IsNullOrWhiteSpace(e.Data)) return;
-            Debug.WriteLine($"Multichaind: {e.Data}");
-            if (e.Data.Contains("Node started"))
-                await successCallback(chainName);
-        }
-
-        private async Task RunDaemon(string chainName, bool clean, Func<string, Task> successCallback)
-        {
-            if (_process != null)
-                if (_process.HasExited)
-                    Debug.WriteLine("Restarting Multichain!!");
-                else
-                    await successCallback(chainName);
-
-            var evotoDir = GetAppDataFolder();
+            // Get working directory and multichaind.exe path
+            var evotoDir = MultiChainTools.GetAppDataFolder();
             var multichainDPath = Path.Combine(evotoDir, "multichaind.exe");
+            MultiChainTools.EnsureFileExists(multichainDPath, Resources.multichaind);
 
-            EnsureFileExists(multichainDPath, Resources.multichaind);
-
+            // Clean if required (multichain bug)
             if (clean)
-            {
-                // TODO: Bug with multichain, have to delete existing chain directory
-                var chainDir = Path.Combine(evotoDir, chainName);
+                MultiChainTools.CleanBlockchain(evotoDir, chain.Name);
 
-                if (Directory.Exists(chainDir))
-                    Directory.Delete(chainDir, true);
-            }
-
-            Debug.WriteLine("Starting MultiChain");
-            _process = new Process
+            Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port}");
+            Debug.WriteLine($"RPC Data: {RpcUser} : {chain.RpcPassword} : {chain.RpcPort}");
+            var pArgs =
+                $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={evotoDir} -server" +
+                $" -rpcuser={RpcUser} -rpcpassword={chain.RpcPassword} -rpcport={chain.RpcPort}";
+            chain.Process = new Process
             {
                 StartInfo =
                 {
@@ -136,117 +92,91 @@ namespace Blockchain
 
                     // Setup executable and parameters
                     FileName = multichainDPath,
-                    Arguments =
-                        $"{chainName}@{ChainHost}:{ChainPort} -daemon -datadir={evotoDir} -server -rpcuser={RpcUser} -rpcpassword={_password} -rpcport={RpcPort}"
+                    Arguments = pArgs
                 }
             };
 
-            _process.ErrorDataReceived += (sender, args) =>
+            // Connect to outputs
+            chain.Process.ErrorDataReceived += (sender, args) =>
             {
-                if (string.IsNullOrWhiteSpace(args.Data)) return;
-                Debug.WriteLine($"Multichaind Error: {args.Data}");
+                if (string.IsNullOrWhiteSpace(args.Data))
+                    return;
+                Debug.WriteLine($"Multichaind Error ({chain.Name}): {args.Data}");
             };
-            _process.OutputDataReceived += async (sender, e) => await WatchProcess(chainName, e, successCallback);
+            chain.Process.OutputDataReceived += async (sender, e) => await WatchProcess(chain, e, successCallback);
 
-            // Go
-            var success = _process.Start();
+            // Launch process
+            var success = chain.Process.Start();
 
             if (!success)
-                throw new SystemException();
+                throw new CouldNotStartProcessException();
 
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
+            // Read outputs
+            chain.Process.BeginOutputReadLine();
+            chain.Process.BeginErrorReadLine();
+
+            return chain;
         }
 
-        public static void EnsureFileExists(string filePath, byte[] file)
+        /// <summary>
+        ///     Disconnects from a blockchain (RPC) and stops the associated daemon
+        /// </summary>
+        /// <param name="chain">Blockchain details</param>
+        public async Task DisconnectAndClose(MultichainModel chain)
+        {
+            await chain.DisconnectRpc();
+            StopDaemon(chain);
+        }
+
+        /// <summary>
+        ///     Connects to a blockchain using RPC
+        /// </summary>
+        /// <param name="chain">Blockchain details</param>
+        private async Task ConnectRpc(MultichainModel chain)
         {
             try
             {
-                if (!File.Exists(filePath)) File.WriteAllBytes(filePath, file);
+                Debug.WriteLine($"Attempting to connect to MultiChain {chain.Name} using RPC");
+                await chain.ConnectRpc();
+
+                Debug.WriteLine($"Connected to {chain.Name}!");
+                
+                // Dispatch to event delegate(s)
+                OnConnect?.Invoke(chain, EventArgs.Empty);
             }
-            catch (Exception e)
+            catch (InvalidOperationException e)
             {
-                Console.WriteLine($"Couldn't get file: {filePath}");
-                Debug.WriteLine(e);
+                Debug.WriteLine($"Could not connect to MultiChain {chain.Name} via RPC");
+                Debug.WriteLine(e.Message);
             }
         }
 
-        private async Task Disconnect()
+        /// <summary>
+        ///     Watches the output from a process, waiting for the success message
+        /// </summary>
+        /// <param name="chain">Blockchain details</param>
+        /// <param name="e">Event args</param>
+        /// <param name="successCallback">Callback on success</param>
+        private static async Task WatchProcess(MultichainModel chain, DataReceivedEventArgs e,
+            Func<MultichainModel, Task> successCallback)
         {
-            Debug.WriteLine($"Disconnecting (Connected: {_connected})");
-
-            if (!_connected)
+            if (string.IsNullOrWhiteSpace(e.Data))
                 return;
-
-            await _client.StopAsync();
+            Debug.WriteLine($"Multichaind ({chain.Name}): {e.Data}");
+            if (e.Data.Contains("Node started"))
+                await successCallback(chain);
         }
 
-        private void StopDaemon()
+
+        private static void StopDaemon(MultichainModel chain)
         {
             Debug.WriteLine(
-                $"Stopping MultiChain Daemon (Process Exists: {_process != null}, Exited: {_process?.HasExited})");
+                $"Stopping MultiChain Daemon (Process Exists: {chain.Process != null}, Exited: {chain.Process?.HasExited})");
 
-            if ((_process == null) || _process.HasExited)
+            if ((chain.Process == null) || chain.Process.HasExited)
                 return;
 
-            _process.Close();
+            chain.Process.Close();
         }
-
-        public static string GetAppDataFolder(string relative = "Evoto")
-        {
-            var appData = Environment.GetEnvironmentVariable("APPDATA");
-            if (appData == null)
-                throw new SystemException("APPDATA Must be set");
-
-            if (relative != null)
-                return Path.Combine(appData, relative);
-            return appData;
-        }
-
-        #region Methods
-
-        public async Task<BlockchainInfoResponse> GetInfo()
-        {
-            var res = await _client.GetBlockchainInfoAsync();
-            return res.Result;
-        }
-
-        public async Task<BlockResponse> GetGenesisBlock()
-        {
-            // Should be possible to get the block by height but client doesn't seem to handle it, so get hash first
-            var hashRes = await _client.GetBlockHashAsync(0);
-            var res = await _client.GetBlockVerboseAsync(hashRes.Result);
-
-            return res.Result;
-        }
-
-        public async Task<string> GetBlock(string hash)
-        {
-            var res = await _client.GetBlockAsync(hash);
-            return res.Result;
-        }
-
-        public async Task<BlockResponse> GetBlockFull(string hash)
-        {
-            var res = await _client.GetBlockVerboseAsync(hash);
-            return res.Result;
-        }
-
-        public async Task<VerboseTransactionResponse> GetTransaction(string txId)
-        {
-            var res = await _client.GetRawTransactionVerboseAsync(txId);
-            return res.Result;
-        }
-
-        public async Task<string> WriteTransaction(object something)
-        {
-            var tx = await _client.CreateRawTransactionAync();
-            var txId = tx.Result;
-            await _client.AppendRawDataAsync(txId, something);
-            await _client.SendRawTransactionAsync(txId);
-            return txId;
-        }
-
-        #endregion
     }
 }
