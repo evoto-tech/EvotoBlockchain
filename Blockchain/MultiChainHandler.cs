@@ -13,7 +13,7 @@ namespace Blockchain
     {
         private const string RpcUser = "evoto";
 
-        private readonly Dictionary<string, MultichainModel> _connections = new Dictionary<string, MultichainModel>();
+        public Dictionary<string, MultichainModel> Connections { get; } = new Dictionary<string, MultichainModel>();
 
         public event EventHandler<EventArgs> OnConnect;
 
@@ -30,10 +30,10 @@ namespace Blockchain
         public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, bool clean = true)
         {
             MultichainModel chain;
-            if (!_connections.TryGetValue(blockchain, out chain))
+            if (!Connections.TryGetValue(blockchain, out chain))
             {
                 chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString());
-                _connections[blockchain] = chain;
+                Connections[blockchain] = chain;
             }
 
             return await RunDaemon(chain, clean, ConnectRpc);
