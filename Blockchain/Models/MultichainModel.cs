@@ -57,7 +57,7 @@ namespace Blockchain.Models
 
             // Reset, in case we encounter an exception
             Connected = false;
-            RpcClient = new MultiChainClient("127.0.0.1", Port, false, RpcUser, RpcPassword, Name);
+            RpcClient = new MultiChainClient("127.0.0.1", RpcPort, false, RpcUser, RpcPassword, Name);
 
             await RpcClient.GetInfoAsync();
             Connected = true;
