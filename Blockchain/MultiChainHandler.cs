@@ -32,7 +32,7 @@ namespace Blockchain
             MultichainModel chain;
             if (!_connections.TryGetValue(blockchain, out chain))
             {
-                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultichainTools.RandomString());
+                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString());
                 _connections[blockchain] = chain;
             }
 
@@ -53,7 +53,7 @@ namespace Blockchain
             if (chain.Process == null)
             {
                 // First time the blockchain is being connected to, need to find a port to host RPC
-                chain.RpcPort = MultichainTools.GetNewPort(EPortType.Rpc);
+                chain.RpcPort = MultiChainTools.GetNewPort(EPortType.Rpc);
             }
             else if (chain.Process.HasExited)
             {
@@ -67,13 +67,13 @@ namespace Blockchain
             }
 
             // Get working directory and multichaind.exe path
-            var evotoDir = MultichainTools.GetAppDataFolder();
+            var evotoDir = MultiChainTools.GetAppDataFolder();
             var multichainDPath = Path.Combine(evotoDir, "multichaind.exe");
-            MultichainTools.EnsureFileExists(multichainDPath, Resources.multichaind);
+            MultiChainTools.EnsureFileExists(multichainDPath, Resources.multichaind);
 
             // Clean if required (multichain bug)
             if (clean)
-                MultichainTools.CleanBlockchain(evotoDir, chain.Name);
+                MultiChainTools.CleanBlockchain(evotoDir, chain.Name);
 
             Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port}");
             Debug.WriteLine($"RPC Data: {RpcUser} : {chain.RpcPassword} : {chain.RpcPort}");

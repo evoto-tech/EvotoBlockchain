@@ -12,7 +12,7 @@ namespace Blockchain.Tests
         public async Task Create_NotExist_Ok()
         {
             const string bName = "myBlockchain";
-            var dir = Path.Combine(MultichainTools.GetAppDataFolder(), bName);
+            var dir = Path.Combine(MultiChainTools.GetAppDataFolder(), bName);
 
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);
@@ -26,7 +26,7 @@ namespace Blockchain.Tests
         public async Task Create_Exists_Exception()
         {
             const string bName = "myBlockchain";
-            var dir = Path.Combine(MultichainTools.GetAppDataFolder(), bName);
+            var dir = Path.Combine(MultiChainTools.GetAppDataFolder(), bName);
 
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);

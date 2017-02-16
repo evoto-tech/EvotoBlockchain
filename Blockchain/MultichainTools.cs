@@ -7,7 +7,7 @@ using Blockchain.Models;
 
 namespace Blockchain
 {
-    public static class MultichainTools
+    public static class MultiChainTools
     {
         private static readonly Random Random = new Random();
 

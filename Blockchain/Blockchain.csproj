@@ -46,7 +46,7 @@
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
     <Compile Include="Models\EPortType.cs" />
     <Compile Include="Models\MultichainModel.cs" />
-    <Compile Include="MultichainTools.cs" />
+    <Compile Include="MultiChainTools.cs" />
     <Compile Include="Exceptions\CouldNotCreateBlockchainException.cs" />
     <Compile Include="MultiChainUtilHandler.cs" />
     <Compile Include="MultiChainHandler.cs" />
