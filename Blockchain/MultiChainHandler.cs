@@ -101,7 +101,7 @@ namespace Blockchain
             {
                 if (string.IsNullOrWhiteSpace(args.Data))
                     return;
-                Debug.WriteLine($"Multichaind Error: {args.Data}");
+                Debug.WriteLine($"Multichaind Error ({chain.Name}): {args.Data}");
             };
             chain.Process.OutputDataReceived += async (sender, e) => await WatchProcess(chain, e, successCallback);
 

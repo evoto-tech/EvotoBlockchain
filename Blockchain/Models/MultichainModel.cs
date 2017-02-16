@@ -37,7 +37,7 @@ namespace Blockchain.Models
         /// <returns></returns>
         public async Task DisconnectRpc()
         {
-            Debug.WriteLine($"Disconnecting (Connected: {Connected})");
+            Debug.WriteLine($"Disconnecting from {Name} (Connected: {Connected})");
 
             if (!Connected || (RpcClient == null))
                 return;
