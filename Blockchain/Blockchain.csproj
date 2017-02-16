@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
+    <Compile Include="Models\EPortType.cs" />
     <Compile Include="Models\MultichainModel.cs" />
     <Compile Include="MultichainTools.cs" />
     <Compile Include="Exceptions\CouldNotCreateBlockchainException.cs" />

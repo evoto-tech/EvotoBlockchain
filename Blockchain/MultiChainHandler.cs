@@ -53,7 +53,7 @@ namespace Blockchain
             if (chain.Process == null)
             {
                 // First time the blockchain is being connected to, need to find a port to host RPC
-                chain.RpcPort = MultichainTools.GetNewRpcPort();
+                chain.RpcPort = MultichainTools.GetNewPort(EPortType.Rpc);
             }
             else if (chain.Process.HasExited)
             {

@@ -52,6 +52,10 @@ namespace Blockchain.Models
         /// <exception cref="InvalidOperationException">Cannot connect to multichain</exception>
         public async Task ConnectRpc()
         {
+            if (RpcClient != null && Connected)
+                return;
+
+            // Reset, in case we encounter an exception
             Connected = false;
             RpcClient = new MultiChainClient("127.0.0.1", Port, false, RpcUser, RpcPassword, Name);
 

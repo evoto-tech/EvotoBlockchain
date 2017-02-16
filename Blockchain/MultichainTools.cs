@@ -3,12 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using Blockchain.Models;
 
 namespace Blockchain
 {
     public static class MultichainTools
     {
-        private static int RpcPort = 24533;
         private static readonly Random Random = new Random();
 
         /// <summary>
@@ -76,23 +76,22 @@ namespace Blockchain
         }
 
         /// <summary>
-        ///     Returns the next available port for RPC connection hosting.
-        ///     Starts from a predefined value, which increases after use
+        ///     Returns the next available port for specified use.
+        ///     Starts from a predefined value for enum
         /// </summary>
         /// <returns>An available TPC Port</returns>
-        public static int GetNewRpcPort()
+        public static int GetNewPort(EPortType type)
         {
             var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
             var tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
             while (true)
             {
+                // Get port from tool
+                var port = PortTypeUtils.GetPortNumber(type);
                 // Check if our desired port is in use
-                if (tcpConnInfoArray.All(t => t.LocalEndPoint.Port != RpcPort))
-                    // This port is good, so return it, and increase our starting point next time
-                    return RpcPort++;
-
-                // Is in use, so increase and try again
-                RpcPort++;
+                if (tcpConnInfoArray.All(t => t.LocalEndPoint.Port != port))
+                    // This port is good
+                    return port;
             }
         }
     }
