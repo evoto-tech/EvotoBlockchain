@@ -43,6 +43,7 @@ namespace Blockchain.Models
                 return;
 
             await RpcClient.StopAsync();
+            RpcClient = null;
             Connected = false;
         }
 
