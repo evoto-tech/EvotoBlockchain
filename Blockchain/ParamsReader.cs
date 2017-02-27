@@ -64,6 +64,9 @@ namespace Blockchain
 
         private static string ValueOut(dynamic value)
         {
+            if (value == null)
+                return "[null]";
+
             if (value is bool)
                 return value.ToString().ToLower();
 
@@ -83,6 +86,9 @@ namespace Blockchain
             double d;
             if (double.TryParse(value, out d))
                 return d;
+
+            if (value == "[null]")
+                return null;
 
             // Hex values are stored as strings
 

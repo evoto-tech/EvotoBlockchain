@@ -20,7 +20,8 @@ namespace Blockchain.Tests
                                $"my-info = 2{NL}" +
                                $"    asdf = AD43     {NL}" +
                                $"my-string = something long and interesting{NL}" +
-                               "# commented-value = 2";
+                               $"# commented-value = 2{NL}" +
+                               $"something-null = [null]";
 
                 File.WriteAllText(fileName, testText);
 
@@ -31,6 +32,7 @@ namespace Blockchain.Tests
                 Assert.AreEqual(2, dict["my-info"]);
                 Assert.AreEqual("AD43", dict["asdf"]);
                 Assert.AreEqual("something long and interesting", dict["my-string"]);
+                Assert.IsNull(dict["something-null"]);
                 Assert.IsFalse(dict.ContainsKey("commented-value"));
             }
             finally
@@ -47,6 +49,29 @@ namespace Blockchain.Tests
         }
 
         [TestMethod]
+        public void ReadParamsFromString_Valid_AccurateDict()
+        {
+            var NL = Environment.NewLine;
+            var testText = $"something-interesting = 1.2{NL}" +
+                           $" another-thing = false # comment about the thing {NL}" +
+                           $"my-info = 2{NL}" +
+                           $"    asdf = AD43     {NL}" +
+                           $"my-string = something long and interesting{NL}" +
+                           $"# commented-value = 2{NL}" +
+                           $"something-null = [null]";
+
+            var dict = ParamsReader.ReadParamsFromString(testText);
+
+            Assert.AreEqual(1.2, dict["something-interesting"]);
+            Assert.AreEqual(false, dict["another-thing"]);
+            Assert.AreEqual(2, dict["my-info"]);
+            Assert.AreEqual("AD43", dict["asdf"]);
+            Assert.AreEqual("something long and interesting", dict["my-string"]);
+            Assert.IsNull(dict["something-null"]);
+            Assert.IsFalse(dict.ContainsKey("commented-value"));
+        }
+
+        [TestMethod]
         public void ParametersToString_Valid_AccurateString()
         {
             var myDict = new Dictionary<string, dynamic>
@@ -54,7 +79,8 @@ namespace Blockchain.Tests
                 {"my-key", false},
                 {"your-key", "something cool"},
                 {"another-key", 1.2},
-                {"something-cool", 0}
+                {"something-cool", 0},
+                {"null-info", null}
             };
 
             var myString = ParamsReader.ParametersToString(myDict);
@@ -63,7 +89,8 @@ namespace Blockchain.Tests
             Assert.AreEqual($"my-key = false{NL}" +
                             $"your-key = something cool{NL}" +
                             $"another-key = 1.2{NL}" +
-                            $"something-cool = 0", myString);
+                            $"something-cool = 0{NL}" +
+                            $"null-info = [null]", myString);
         }
 
         [TestMethod]
@@ -77,7 +104,8 @@ namespace Blockchain.Tests
                     {"my-key", false},
                     {"your-key", "something cool"},
                     {"another-key", 1.2},
-                    {"something-cool", 0}
+                    {"something-cool", 0},
+                    {"null-info", null}
                 };
 
                 ParamsReader.ParametersToFile(fileName, myDict);
@@ -88,7 +116,8 @@ namespace Blockchain.Tests
                 Assert.AreEqual($"my-key = false{NL}" +
                                 $"your-key = something cool{NL}" +
                                 $"another-key = 1.2{NL}" +
-                                $"something-cool = 0", myString);
+                                $"something-cool = 0{NL}" +
+                                $"null-info = [null]", myString);
             }
             finally
             {
