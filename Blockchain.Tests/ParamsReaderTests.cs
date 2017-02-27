@@ -55,6 +55,7 @@ namespace Blockchain.Tests
             var testText = $"something-interesting = 1.2{NL}" +
                            $" another-thing = false # comment about the thing {NL}" +
                            $"my-info = 2{NL}" +
+                           NL + NL +
                            $"    asdf = AD43     {NL}" +
                            $"my-string = something long and interesting{NL}" +
                            $"# commented-value = 2{NL}" +
@@ -69,6 +70,26 @@ namespace Blockchain.Tests
             Assert.AreEqual("something long and interesting", dict["my-string"]);
             Assert.IsNull(dict["something-null"]);
             Assert.IsFalse(dict.ContainsKey("commented-value"));
+        }
+
+        [TestMethod]
+        public void ReadParamsFromString_MissingEquals_Ignored()
+        {
+            var testText = $"something-interesting: 1.2{NL}";
+
+            var dict = ParamsReader.ReadParamsFromString(testText);
+
+            Assert.AreEqual(0, dict.Count);
+        }
+
+        [TestMethod]
+        public void ReadParamsFromString_MultipleEquals_Ignored()
+        {
+            var testText = $"something-interesting = 1.2 = something else{NL}";
+
+            var dict = ParamsReader.ReadParamsFromString(testText);
+
+            Assert.AreEqual(0, dict.Count);
         }
 
         [TestMethod]
