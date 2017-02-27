@@ -8,6 +8,8 @@ namespace Blockchain
 {
     public class ParamsReader
     {
+        private static readonly string NL = Environment.NewLine;
+
         public static Dictionary<string, dynamic> ReadParamsFromFile(string fileName)
         {
             // File wont be huge, therefore okay to read into memory
@@ -20,7 +22,7 @@ namespace Blockchain
         {
             var myParams = new Dictionary<string, dynamic>();
             var x = 0;
-            foreach (var line in paramsContent.Split(new[] {Environment.NewLine}, StringSplitOptions.None))
+            foreach (var line in paramsContent.Split(new[] {NL}, StringSplitOptions.None))
             {
                 x++;
                 if (string.IsNullOrWhiteSpace(line))
@@ -53,7 +55,7 @@ namespace Blockchain
 
         public static string ParametersToString(Dictionary<string, dynamic> dict)
         {
-            return string.Join(Environment.NewLine, dict.Select(d => $"{d.Key} = {ValueOut(d.Value)}"));
+            return string.Join(NL, dict.Select(d => $"{d.Key} = {ValueOut(d.Value)}")) + NL;
         }
 
         public static void ParametersToFile(string fileName, Dictionary<string, dynamic> dict)

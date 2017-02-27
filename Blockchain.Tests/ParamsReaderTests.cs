@@ -8,13 +8,14 @@ namespace Blockchain.Tests
     [TestClass]
     public class ParamsReaderTests
     {
+        private static readonly string NL = Environment.NewLine;
+
         [TestMethod]
         public void ReadParamsFromFile_FileExists_Success()
         {
             const string fileName = "test.txt";
             try
             {
-                var NL = Environment.NewLine;
                 var testText = $"something-interesting = 1.2{NL}" +
                                $" another-thing = false # comment about the thing {NL}" +
                                $"my-info = 2{NL}" +
@@ -51,7 +52,6 @@ namespace Blockchain.Tests
         [TestMethod]
         public void ReadParamsFromString_Valid_AccurateDict()
         {
-            var NL = Environment.NewLine;
             var testText = $"something-interesting = 1.2{NL}" +
                            $" another-thing = false # comment about the thing {NL}" +
                            $"my-info = 2{NL}" +
@@ -85,12 +85,11 @@ namespace Blockchain.Tests
 
             var myString = ParamsReader.ParametersToString(myDict);
 
-            var NL = Environment.NewLine;
             Assert.AreEqual($"my-key = false{NL}" +
                             $"your-key = something cool{NL}" +
                             $"another-key = 1.2{NL}" +
                             $"something-cool = 0{NL}" +
-                            $"null-info = [null]", myString);
+                            $"null-info = [null]{NL}", myString);
         }
 
         [TestMethod]
@@ -112,12 +111,11 @@ namespace Blockchain.Tests
 
                 var myString = File.ReadAllText(fileName);
 
-                var NL = Environment.NewLine;
                 Assert.AreEqual($"my-key = false{NL}" +
                                 $"your-key = something cool{NL}" +
                                 $"another-key = 1.2{NL}" +
                                 $"something-cool = 0{NL}" +
-                                $"null-info = [null]", myString);
+                                $"null-info = [null]{NL}", myString);
             }
             finally
             {
