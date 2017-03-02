@@ -36,7 +36,10 @@ namespace Blockchain
                 Connections[blockchain] = chain;
             }
 
-            return await RunDaemon(chain, clean, ConnectRpc);
+            var model = await RunDaemon(chain, clean);
+            await ConnectRpc(model);
+
+            return model;
         }
 
         /// <summary>
@@ -45,10 +48,8 @@ namespace Blockchain
         /// </summary>
         /// <param name="chain">Blockchain connection/status data</param>
         /// <param name="clean">Should clean local blockchain directory?</param>
-        /// <param name="successCallback">Callsback on successful launch</param>
         /// <returns>Blockchain connection/status data</returns>
-        private static async Task<MultichainModel> RunDaemon(MultichainModel chain, bool clean,
-            Func<MultichainModel, Task> successCallback = null)
+        private static async Task<MultichainModel> RunDaemon(MultichainModel chain, bool clean)
         {
             if (chain.Process == null)
             {
@@ -61,8 +62,6 @@ namespace Blockchain
             }
             else
             {
-                if (successCallback != null)
-                    await successCallback(chain);
                 return chain;
             }
 
@@ -96,6 +95,8 @@ namespace Blockchain
                 }
             };
 
+            var taskCompletion = new TaskCompletionSource<bool>();
+
             // Connect to outputs
             chain.Process.ErrorDataReceived += (sender, args) =>
             {
@@ -103,7 +104,14 @@ namespace Blockchain
                     return;
                 Debug.WriteLine($"Multichaind Error ({chain.Name}): {args.Data}");
             };
-            chain.Process.OutputDataReceived += async (sender, e) => await WatchProcess(chain, e, successCallback);
+            chain.Process.OutputDataReceived += (sender, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(e.Data))
+                    return;
+                Debug.WriteLine($"Multichaind ({chain.Name}): {e.Data}");
+                if (e.Data.Contains("Node started"))
+                    taskCompletion.SetResult(true);
+            };
 
             // Launch process
             var success = chain.Process.Start();
@@ -114,6 +122,15 @@ namespace Blockchain
             // Read outputs
             chain.Process.BeginOutputReadLine();
             chain.Process.BeginErrorReadLine();
+
+            await Task.Run(() =>
+            {
+                if (!taskCompletion.Task.Wait(TimeSpan.FromMinutes(1)))
+                {
+                    chain.Process.Kill();
+                    throw new CouldNotStartDaemonException("No Success Message");
+                }
+            });
 
             return chain;
         }
@@ -140,7 +157,7 @@ namespace Blockchain
                 await chain.ConnectRpc();
 
                 Debug.WriteLine($"Connected to {chain.Name}!");
-                
+
                 // Dispatch to event delegate(s)
                 OnConnect?.Invoke(chain, EventArgs.Empty);
             }
@@ -150,23 +167,6 @@ namespace Blockchain
                 Debug.WriteLine(e.Message);
             }
         }
-
-        /// <summary>
-        ///     Watches the output from a process, waiting for the success message
-        /// </summary>
-        /// <param name="chain">Blockchain details</param>
-        /// <param name="e">Event args</param>
-        /// <param name="successCallback">Callback on success</param>
-        private static async Task WatchProcess(MultichainModel chain, DataReceivedEventArgs e,
-            Func<MultichainModel, Task> successCallback)
-        {
-            if (string.IsNullOrWhiteSpace(e.Data))
-                return;
-            Debug.WriteLine($"Multichaind ({chain.Name}): {e.Data}");
-            if (e.Data.Contains("Node started"))
-                await successCallback(chain);
-        }
-
 
         private static void StopDaemon(MultichainModel chain)
         {

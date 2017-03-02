@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
     <Compile Include="Models\EPortType.cs" />
     <Compile Include="Models\MultichainModel.cs" />
