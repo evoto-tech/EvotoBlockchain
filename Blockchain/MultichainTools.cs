@@ -12,6 +12,9 @@ namespace Blockchain
         public const string ROOT_STREAM_NAME = "root";
         public const string QUESTIONS_KEY = "questions";
 
+        // This can be set to allow Api and Client to be ran on the same machine
+        public static string SubDirectory = "";
+
         private static readonly Random Random = new Random();
 
         /// <summary>
@@ -74,8 +77,8 @@ namespace Blockchain
                 throw new SystemException("APPDATA Must be set");
 
             if (relative != null)
-                return Path.Combine(appData, relative);
-            return appData;
+                return Path.Combine(appData, relative, SubDirectory);
+            return Path.Combine(appData, SubDirectory);
         }
 
         /// <summary>
