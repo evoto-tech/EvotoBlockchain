@@ -12,7 +12,7 @@ namespace Blockchain
     {
         public static async Task CreateBlockchain(string blockchainName)
         {
-            var evotoDir = MultiChainTools.GetAppDataFolder();
+            var evotoDir = MultiChainTools.GetAppDataFolder(allowSubDir: false);
             var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
 
             MultiChainTools.EnsureFileExists(multichainUtilPath, Resources.multichain_util);

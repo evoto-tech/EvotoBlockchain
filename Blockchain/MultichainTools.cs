@@ -69,16 +69,17 @@ namespace Blockchain
         ///     Throws a SystemException if APPDATA environment variable is not set.
         /// </summary>
         /// <param name="relative">Relative path to add on to end of AppData</param>
+        /// <param name="allowSubDir">Should prepend the default subdir if one is set</param>
         /// <returns>Path of AppData, with optional suffix appended</returns>
-        public static string GetAppDataFolder(string relative = "Evoto")
+        public static string GetAppDataFolder(string relative = "Evoto", bool allowSubDir = true)
         {
             var appData = Environment.GetEnvironmentVariable("APPDATA");
             if (appData == null)
                 throw new SystemException("APPDATA Must be set");
 
-            if (relative != null)
-                return Path.Combine(appData, relative, SubDirectory);
-            return Path.Combine(appData, SubDirectory);
+            var suffix = (allowSubDir) ? SubDirectory : "";
+            
+            return Path.Combine(appData, relative, suffix);
         }
 
         /// <summary>
