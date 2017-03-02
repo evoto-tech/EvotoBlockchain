@@ -67,7 +67,7 @@ namespace Blockchain
             }
 
             // Get working directory and multichaind.exe path
-            var evotoDir = MultiChainTools.GetAppDataFolder();
+            var evotoDir = MultiChainTools.GetAppDataFolder(allowSubDir: false);
             var multichainDPath = Path.Combine(evotoDir, "multichaind.exe");
             MultiChainTools.EnsureFileExists(multichainDPath, Resources.multichaind);
 
