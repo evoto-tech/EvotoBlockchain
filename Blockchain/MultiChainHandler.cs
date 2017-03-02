@@ -75,10 +75,11 @@ namespace Blockchain
             if (clean)
                 MultiChainTools.CleanBlockchain(evotoDir, chain.Name);
 
+            var dataDir = MultiChainTools.GetAppDataFolder();
             Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port} ({chain.LocalPort})");
             Debug.WriteLine($"RPC Data: {RpcUser} : {chain.RpcPassword} : {chain.RpcPort}");
             var pArgs =
-                $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={evotoDir} -server -port={chain.LocalPort}" +
+                $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={dataDir} -server -port={chain.LocalPort}" +
                 $" -rpcuser={RpcUser} -rpcpassword={chain.RpcPassword} -rpcport={chain.RpcPort}";
             chain.Process = new Process
             {
