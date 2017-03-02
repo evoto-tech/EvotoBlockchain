@@ -19,6 +19,7 @@ namespace Blockchain
 
             Debug.WriteLine($"Creating MultiChain: {blockchainName}");
 
+            var dataDir = MultiChainTools.GetAppDataFolder();
             var process = new Process
             {
                 StartInfo =
@@ -31,7 +32,7 @@ namespace Blockchain
 
                     // Setup executable and parameters
                     FileName = multichainUtilPath,
-                    Arguments = $"-datadir={evotoDir} create {blockchainName}"
+                    Arguments = $"-datadir={dataDir} create {blockchainName}"
                 }
             };
 
