@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Blockchain.Exceptions;
 using Blockchain.Properties;
@@ -13,7 +14,6 @@ namespace Blockchain
         {
             var evotoDir = MultiChainTools.GetAppDataFolder();
             var multichainUtilPath = Path.Combine(evotoDir, "multichain-util.exe");
-            var taskCompletion = new TaskCompletionSource<bool>();
 
             MultiChainTools.EnsureFileExists(multichainUtilPath, Resources.multichain_util);
 
@@ -51,13 +51,6 @@ namespace Blockchain
             };
 
             // Go
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, e) =>
-            {
-                if (errQueue.Count > 0)
-                    throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
-                taskCompletion.SetResult(true);
-            };
             var success = process.Start();
 
             if (!success)
@@ -66,13 +59,22 @@ namespace Blockchain
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             // Wait for process to end
-            if (!process.WaitForExit(10000))
+            await Task.Run(() =>
             {
-                process.Kill();
-                throw new CouldNotCreateBlockchainException("Process timed out");
-            }
-
-            await taskCompletion.Task;
+                if (process.WaitForExit(10*1000))
+                {
+                    // Allow error events time to be processed
+                    Thread.Sleep(100);
+                    if (errQueue.Count > 0)
+                        throw new CouldNotCreateBlockchainException(string.Join("\n", errQueue));
+                }
+                else
+                {
+                    // Process hanging
+                    process.Kill();
+                    throw new CouldNotCreateBlockchainException("Process timed out");
+                }
+            });
         }
     }
 }

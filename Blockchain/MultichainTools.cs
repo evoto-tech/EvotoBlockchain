@@ -9,6 +9,9 @@ namespace Blockchain
 {
     public static class MultiChainTools
     {
+        public const string ROOT_STREAM_NAME = "root";
+        public const string QUESTIONS_KEY = "questions";
+
         private static readonly Random Random = new Random();
 
         /// <summary>

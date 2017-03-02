@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MultiChainLib;
+using MultiChainLib.Client;
+using MultiChainLib.Model;
+using Newtonsoft.Json;
 
 namespace Blockchain.Models
 {
@@ -109,6 +115,20 @@ namespace Blockchain.Models
             await RpcClient.AppendRawDataAsync(txId, something);
             await RpcClient.SendRawTransactionAsync(txId);
             return txId;
+        }
+
+        public async Task<string> WriteToStream(string stream, string key, object data)
+        {
+            var jsonData = JsonConvert.SerializeObject(data);
+            var bytes = Encoding.UTF8.GetBytes(jsonData);
+            var res = await RpcClient.PublishAsync(stream, key, bytes);
+            return res.Result;
+        }
+
+        public async Task<List<ListStreamKeyItemsResponse>> GetStreamKeyItems(string stream, string key)
+        {
+            var res = await RpcClient.ListStreamKeyItems(stream, key);
+            return res.Result;
         }
 
         #endregion
