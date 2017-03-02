@@ -25,14 +25,15 @@ namespace Blockchain
         /// <param name="hostname">Blockchain host</param>
         /// <param name="blockchain">Blockchain name</param>
         /// <param name="port">Blockchain port</param>
+        /// <param name="localPort">Blockchain local port</param>
         /// <param name="clean">Should clean local blockchain directory?</param>
         /// <returns></returns>
-        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, bool clean = true)
+        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, int localPort, bool clean = true)
         {
             MultichainModel chain;
             if (!Connections.TryGetValue(blockchain, out chain))
             {
-                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString());
+                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString(), localPort);
                 Connections[blockchain] = chain;
             }
 
@@ -74,10 +75,10 @@ namespace Blockchain
             if (clean)
                 MultiChainTools.CleanBlockchain(evotoDir, chain.Name);
 
-            Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port}");
+            Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port} ({chain.LocalPort})");
             Debug.WriteLine($"RPC Data: {RpcUser} : {chain.RpcPassword} : {chain.RpcPort}");
             var pArgs =
-                $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={evotoDir} -server" +
+                $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={evotoDir} -server -port={chain.LocalPort}" +
                 $" -rpcuser={RpcUser} -rpcpassword={chain.RpcPassword} -rpcport={chain.RpcPort}";
             chain.Process = new Process
             {

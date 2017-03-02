@@ -15,7 +15,9 @@ namespace Blockchain.Models
     {
         public string Hostname { get; }
         public int Port { get; }
+
         public string Name { get; }
+        public int LocalPort { get; }
 
         public string RpcUser { get; }
         public int RpcPort { get; set; }
@@ -26,13 +28,14 @@ namespace Blockchain.Models
 
         public MultiChainClient RpcClient { get; set; }
 
-        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword)
+        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword, int localPort)
         {
             Hostname = hostname;
             Port = port;
             Name = name;
             RpcUser = rpcUser;
             RpcPassword = rpcPassword;
+            LocalPort = localPort;
         }
 
         #region Setup/Teardown
