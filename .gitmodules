@@ -1,0 +1,4 @@
+[submodule "MultiChainLib"]
+	path = MultiChainLib
+	url = https://github.com/evoto-tech/MultiChainLib.git
+  branch = master
