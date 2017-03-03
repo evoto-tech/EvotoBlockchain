@@ -110,7 +110,7 @@ namespace Blockchain
         /// <returns>Parameter Dictionary</returns>
         public static Dictionary<string, dynamic> GetBlockchainConfig(string blockchainName)
         {
-            return ParamsReader.ReadParamsFromFile(Path.Combine(GetAppDataFolder(), blockchainName));
+            return ParamsReader.ReadParamsFromFile(Path.Combine(GetAppDataFolder(), blockchainName, "params.dat"));
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Blockchain
         /// <param name="data">Parameter Dictionary</param>
         public static void WriteBlockchainConfig(string blockchainName, Dictionary<string, dynamic> data)
         {
-            ParamsReader.ParametersToFile(Path.Combine(GetAppDataFolder(), blockchainName), data);
+            ParamsReader.ParametersToFile(Path.Combine(GetAppDataFolder(), blockchainName, "params.dat"), data);
         }
     }
 }
