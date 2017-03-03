@@ -9,8 +9,12 @@ namespace Blockchain.Models
         // Strictly this doesn't have to be a different range, however there seems to
         // be an issue running both client and server on the same machine, the client
         // can't detect that the port is in use by the server. This is a workaround
+        // TODO: Refactor so this isn't necessary, or fix port detection
         ClientMultichainD,
-        Rpc
+
+        Rpc,
+        // Same again
+        ClientRpc
     }
 
     public static class PortTypeUtils
@@ -46,6 +50,9 @@ namespace Blockchain.Models
                     break;
                 case EPortType.Rpc:
                     port = 24533;
+                    break;
+                case EPortType.ClientRpc:
+                    port = 25533;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
