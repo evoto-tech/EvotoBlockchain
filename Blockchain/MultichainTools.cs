@@ -109,9 +109,9 @@ namespace Blockchain
         /// <param name="path">Data Directory of the blockchain</param>
         /// <param name="blockchainName">Name of blockchain</param>
         /// <returns>Parameter Dictionary</returns>
-        public static object GetBlockchainConfig(string path, string blockchainName)
+        public static object GetBlockchainConfig(string blockchainName)
         {
-            return ParamsReader.ReadParamsFromFile(Path.Combine(path, blockchainName));
+            return ParamsReader.ReadParamsFromFile(Path.Combine(GetAppDataFolder(), blockchainName));
         }
 
         /// <summary>
@@ -120,9 +120,9 @@ namespace Blockchain
         /// <param name="path">Data Directory of the blockchain</param>
         /// <param name="blockchainName">Name of the blockchain</param>
         /// <param name="data">Parameter Dictionary</param>
-        public static void WriteBlockchainConfig(string path, string blockchainName, Dictionary<string, dynamic> data)
+        public static void WriteBlockchainConfig(string blockchainName, Dictionary<string, dynamic> data)
         {
-            ParamsReader.ParametersToFile(Path.Combine(path, blockchainName), data);
+            ParamsReader.ParametersToFile(Path.Combine(GetAppDataFolder(), blockchainName), data);
         }
     }
 }
