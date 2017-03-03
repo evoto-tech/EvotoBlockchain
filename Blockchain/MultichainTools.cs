@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -100,6 +101,28 @@ namespace Blockchain
                     // This port is good
                     return port;
             }
+        }
+
+        /// <summary>
+        /// Returns the config parameters dictionary for a blockchain before it has been initialized
+        /// </summary>
+        /// <param name="path">Data Directory of the blockchain</param>
+        /// <param name="blockchainName">Name of blockchain</param>
+        /// <returns>Parameter Dictionary</returns>
+        public static object GetBlockchainConfig(string path, string blockchainName)
+        {
+            return ParamsReader.ReadParamsFromFile(Path.Combine(path, blockchainName));
+        }
+
+        /// <summary>
+        /// Updates the config parameters dictionary for a blockchain before it has been initialized
+        /// </summary>
+        /// <param name="path">Data Directory of the blockchain</param>
+        /// <param name="blockchainName">Name of the blockchain</param>
+        /// <param name="data">Parameter Dictionary</param>
+        public static void WriteBlockchainConfig(string path, string blockchainName, Dictionary<string, dynamic> data)
+        {
+            ParamsReader.ParametersToFile(Path.Combine(path, blockchainName), data);
         }
     }
 }
