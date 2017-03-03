@@ -78,8 +78,8 @@ namespace Blockchain
             if (appData == null)
                 throw new SystemException("APPDATA Must be set");
 
-            var suffix = (allowSubDir) ? SubDirectory : "";
-            
+            var suffix = allowSubDir ? SubDirectory : "";
+
             return Path.Combine(appData, relative, suffix);
         }
 
@@ -104,20 +104,18 @@ namespace Blockchain
         }
 
         /// <summary>
-        /// Returns the config parameters dictionary for a blockchain before it has been initialized
+        ///     Returns the config parameters dictionary for a blockchain before it has been initialized
         /// </summary>
-        /// <param name="path">Data Directory of the blockchain</param>
         /// <param name="blockchainName">Name of blockchain</param>
         /// <returns>Parameter Dictionary</returns>
-        public static object GetBlockchainConfig(string blockchainName)
+        public static Dictionary<string, dynamic> GetBlockchainConfig(string blockchainName)
         {
             return ParamsReader.ReadParamsFromFile(Path.Combine(GetAppDataFolder(), blockchainName));
         }
 
         /// <summary>
-        /// Updates the config parameters dictionary for a blockchain before it has been initialized
+        ///     Updates the config parameters dictionary for a blockchain before it has been initialized
         /// </summary>
-        /// <param name="path">Data Directory of the blockchain</param>
         /// <param name="blockchainName">Name of the blockchain</param>
         /// <param name="data">Parameter Dictionary</param>
         public static void WriteBlockchainConfig(string blockchainName, Dictionary<string, dynamic> data)
