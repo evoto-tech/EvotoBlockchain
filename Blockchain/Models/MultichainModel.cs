@@ -150,6 +150,18 @@ namespace Blockchain.Models
             return res.Result;
         }
 
+        public async Task<List<TransactionDetailsResponse>> GetWalletTransactions()
+        {
+            var res = await RpcClient.ListWalletTransactions();
+            return res.Result;
+        }
+
+        public async Task<List<TransactionDetailsResponse>> GetAddressTransactions(string address)
+        {
+            var res = await RpcClient.ListAddressTransactionsAsync(address);
+            return res.Result;
+        }
+
         public async Task<string> IssueVote(string to)
         {
             var assets = await RpcClient.ListAssetsAsync();
