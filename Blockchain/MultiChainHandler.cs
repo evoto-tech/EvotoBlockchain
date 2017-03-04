@@ -53,13 +53,13 @@ namespace Blockchain
         /// <returns>Blockchain connection/status data</returns>
         private static async Task<MultichainModel> RunDaemon(MultichainModel chain, bool clean)
         {
-            if (chain.Process.HasExited)
+            if (chain.Process != null)
             {
+                if (!chain.Process.HasExited)
+                {
+                    return chain; 
+                }
                 Debug.WriteLine($"Restarting Multichaind for chain: {chain.Name}!!");
-            }
-            else
-            {
-                return chain;
             }
 
             // Get working directory and multichaind.exe path
