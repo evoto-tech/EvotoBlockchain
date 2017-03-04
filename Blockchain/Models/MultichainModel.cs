@@ -149,21 +149,30 @@ namespace Blockchain.Models
         public async Task<string> IssueVote(string to)
         {
             var assets = await RpcClient.ListAssetsAsync();
-            if (assets.Result.Any(a => a.Name == MultiChainTools.VOTE_ASSET_NAME))
+            if (assets.Result.Any(a => GetAssetName(a) == MultiChainTools.VOTE_ASSET_NAME))
             {
                 var res = await RpcClient.IssueMoreAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1);
                 return res.Result;
             }
             else
             {
-                var assetParams = new
+                var assetParams = new AssetParams
                 {
-                    name = MultiChainTools.VOTE_ASSET_NAME,
-                    open = true
+                    Name = MultiChainTools.VOTE_ASSET_NAME,
+                    Open = true
                 };
                 var res = await RpcClient.IssueAsync(to, assetParams, 1, 1);
                 return res.Result;
             }
+        }
+
+        private static string GetAssetName(AssetResponse asset)
+        {
+            if (!asset.Name.StartsWith("{"))
+                return asset.Name;
+
+            var parameters = JsonConvert.DeserializeObject<AssetParams>(asset.Name);
+            return parameters.Name;
         }
 
         #endregion
