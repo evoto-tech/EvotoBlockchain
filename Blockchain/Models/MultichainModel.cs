@@ -156,7 +156,12 @@ namespace Blockchain.Models
             }
             else
             {
-                var res = await RpcClient.IssueAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
+                var assetParams = new
+                {
+                    name = MultiChainTools.VOTE_ASSET_NAME,
+                    open = true
+                };
+                var res = await RpcClient.IssueAsync(to, assetParams, 1, 1);
                 return res.Result;
             }
         }
