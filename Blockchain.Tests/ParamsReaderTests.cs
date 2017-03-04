@@ -28,9 +28,9 @@ namespace Blockchain.Tests
 
                 var dict = ParamsReader.ReadParamsFromFile(fileName);
 
-                Assert.AreEqual(1.2, dict["something-interesting"]);
-                Assert.AreEqual(false, dict["another-thing"]);
-                Assert.AreEqual(2, dict["my-info"]);
+                Assert.AreEqual("1.2", dict["something-interesting"]);
+                Assert.AreEqual("false", dict["another-thing"]);
+                Assert.AreEqual("2", dict["my-info"]);
                 Assert.AreEqual("AD43", dict["asdf"]);
                 Assert.AreEqual("something long and interesting", dict["my-string"]);
                 Assert.IsNull(dict["something-null"]);
@@ -63,9 +63,9 @@ namespace Blockchain.Tests
 
             var dict = ParamsReader.ReadParamsFromString(testText);
 
-            Assert.AreEqual(1.2, dict["something-interesting"]);
-            Assert.AreEqual(false, dict["another-thing"]);
-            Assert.AreEqual(2, dict["my-info"]);
+            Assert.AreEqual("1.2", dict["something-interesting"]);
+            Assert.AreEqual("false", dict["another-thing"]);
+            Assert.AreEqual("2", dict["my-info"]);
             Assert.AreEqual("AD43", dict["asdf"]);
             Assert.AreEqual("something long and interesting", dict["my-string"]);
             Assert.IsNull(dict["something-null"]);
