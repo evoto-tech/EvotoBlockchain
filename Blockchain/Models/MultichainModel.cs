@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MultiChainLib.Client;
@@ -116,7 +117,11 @@ namespace Blockchain.Models
             var tx = await RpcClient.CreateRawTransactionAync();
             var txId = tx.Result;
             if (data != null)
-                await RpcClient.AppendRawDataAsync(txId, data);
+            {
+                var jsonData = JsonConvert.SerializeObject(data);
+                var bytes = Encoding.UTF8.GetBytes(jsonData);
+                await RpcClient.AppendRawDataAsync(txId, MultiChainClient.FormatHex(bytes));
+            }
             await RpcClient.SendRawTransactionAsync(txId);
             return txId;
         }
@@ -143,8 +148,17 @@ namespace Blockchain.Models
 
         public async Task<string> IssueVote(string to)
         {
-            var res = await RpcClient.IssueAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
-            return res.Result;
+            var assets = await RpcClient.ListAssetsAsync();
+            if (assets.Result.Any(a => a.Name == MultiChainTools.VOTE_ASSET_NAME))
+            {
+                var res = await RpcClient.IssueMoreAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
+                return res.Result;
+            }
+            else
+            {
+                var res = await RpcClient.IssueAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
+                return res.Result;
+            }
         }
 
         #endregion
