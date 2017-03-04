@@ -26,14 +26,15 @@ namespace Blockchain
         /// <param name="blockchain">Blockchain name</param>
         /// <param name="port">Blockchain port</param>
         /// <param name="localPort">Blockchain local port</param>
+        /// <param name="rpcPort">Blockchain local RPC port</param>
         /// <param name="clean">Should clean local blockchain directory?</param>
         /// <returns></returns>
-        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, int localPort, bool clean = true)
+        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, int localPort, int rpcPort, bool clean = true)
         {
             MultichainModel chain;
             if (!Connections.TryGetValue(blockchain, out chain))
             {
-                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString(), localPort);
+                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString(), localPort, rpcPort);
                 Connections[blockchain] = chain;
             }
 
@@ -52,12 +53,7 @@ namespace Blockchain
         /// <returns>Blockchain connection/status data</returns>
         private static async Task<MultichainModel> RunDaemon(MultichainModel chain, bool clean)
         {
-            if (chain.Process == null)
-            {
-                // First time the blockchain is being connected to, need to find a port to host RPC
-                chain.RpcPort = MultiChainTools.GetNewPort(EPortType.Rpc);
-            }
-            else if (chain.Process.HasExited)
+            if (chain.Process.HasExited)
             {
                 Debug.WriteLine($"Restarting Multichaind for chain: {chain.Name}!!");
             }

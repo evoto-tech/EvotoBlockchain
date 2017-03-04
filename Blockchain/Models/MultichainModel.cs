@@ -12,7 +12,7 @@ namespace Blockchain.Models
 {
     public class MultichainModel
     {
-        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword, int localPort)
+        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword, int localPort, int rpcPort)
         {
             Hostname = hostname;
             Port = port;
@@ -20,6 +20,7 @@ namespace Blockchain.Models
             RpcUser = rpcUser;
             RpcPassword = rpcPassword;
             LocalPort = localPort;
+            RpcPort = rpcPort;
         }
 
         public string Hostname { get; }
