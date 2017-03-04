@@ -141,6 +141,12 @@ namespace Blockchain.Models
             return res.Result;
         }
 
+        public async Task<string> IssueVote(string to)
+        {
+            var res = await RpcClient.IssueAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
+            return res.Result;
+        }
+
         #endregion
     }
 }

@@ -12,6 +12,7 @@ namespace Blockchain
     {
         public const string ROOT_STREAM_NAME = "root";
         public const string QUESTIONS_KEY = "questions";
+        public const string VOTE_ASSET_NAME = "vote";
 
         // This can be set to allow Api and Client to be ran on the same machine
         public static string SubDirectory = "";
