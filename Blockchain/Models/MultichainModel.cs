@@ -116,7 +116,7 @@ namespace Blockchain.Models
             IEnumerable<CreateRawTransactionAmount> assets = null,
             object data = null)
         {
-            var tx = await RpcClient.CreateRawTransactionAync();
+            var tx = await RpcClient.CreateRawTransactionAync(txIds, assets);
             var txId = tx.Result;
             if (data != null)
             {
