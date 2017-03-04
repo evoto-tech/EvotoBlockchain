@@ -112,20 +112,22 @@ namespace Blockchain.Models
         }
 
         public async Task<string> WriteTransaction(
-            IEnumerable<CreateRawTransactionTxIn> txIds = null,
-            IEnumerable<CreateRawTransactionAmount> assets = null,
+            IEnumerable<CreateRawTransactionTxIn> txIds,
+            IEnumerable<CreateRawTransactionAmount> assets,
             object data = null)
         {
-            var tx = await RpcClient.CreateRawTransactionAync(txIds, assets);
-            var txId = tx.Result;
+            var blobRes = await RpcClient.CreateRawTransactionAync(txIds, assets);
+            var blob = blobRes.Result;
             if (data != null)
             {
                 var jsonData = JsonConvert.SerializeObject(data);
                 var bytes = Encoding.UTF8.GetBytes(jsonData);
-                await RpcClient.AppendRawDataAsync(txId, MultiChainClient.FormatHex(bytes));
+                blobRes = await RpcClient.AppendRawDataAsync(blob, MultiChainClient.FormatHex(bytes));
+                blob = blobRes.Result;
             }
-            await RpcClient.SendRawTransactionAsync(txId);
-            return txId;
+            var signedRes = await RpcClient.SignRawTransactionAsync(blob);
+            var txId = await RpcClient.SendRawTransactionAsync(signedRes.Result.Hex);
+            return txId.Result;
         }
 
         public async Task<string> WriteToStream(string stream, string key, object data)
@@ -166,6 +168,20 @@ namespace Blockchain.Models
                 var res = await RpcClient.IssueAsync(to, assetParams, 1, 1);
                 return res.Result;
             }
+        }
+
+        public async Task<List<BlockchainQuestionModel>> GetQuestions()
+        {
+            // TODO: Handle multiple questions. For now assume exactly 1
+            var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
+            var hex = result.First().Data;
+
+            var bytes = MultiChainClient.ParseHexString(hex);
+            var text = Encoding.UTF8.GetString(bytes);
+            return new List<BlockchainQuestionModel>
+            {
+                JsonConvert.DeserializeObject<BlockchainQuestionModel>(text)
+            };
         }
 
         #endregion
