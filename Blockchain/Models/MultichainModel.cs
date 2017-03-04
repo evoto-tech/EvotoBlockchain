@@ -151,7 +151,7 @@ namespace Blockchain.Models
             var assets = await RpcClient.ListAssetsAsync();
             if (assets.Result.Any(a => a.Name == MultiChainTools.VOTE_ASSET_NAME))
             {
-                var res = await RpcClient.IssueMoreAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1, 1);
+                var res = await RpcClient.IssueMoreAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1);
                 return res.Result;
             }
             else
