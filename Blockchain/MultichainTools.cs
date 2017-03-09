@@ -81,7 +81,13 @@ namespace Blockchain
 
             var suffix = allowSubDir ? SubDirectory : "";
 
-            return Path.Combine(appData, relative, suffix);
+            var dir = Path.Combine(appData, relative, suffix);
+
+            // Create directory directory if doesn't exist.
+            // If multiple levels of directories, creates all that are required
+            Directory.CreateDirectory(dir);
+
+            return dir;
         }
 
         /// <summary>
