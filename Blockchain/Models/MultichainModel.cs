@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MultiChainLib;
 using MultiChainLib.Client;
 using MultiChainLib.Model;
 using Newtonsoft.Json;
@@ -13,6 +12,18 @@ namespace Blockchain.Models
 {
     public class MultichainModel
     {
+        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword, int localPort,
+            int rpcPort)
+        {
+            Hostname = hostname;
+            Port = port;
+            Name = name;
+            RpcUser = rpcUser;
+            RpcPassword = rpcPassword;
+            LocalPort = localPort;
+            RpcPort = rpcPort;
+        }
+
         public string Hostname { get; }
         public int Port { get; }
 
@@ -28,20 +39,10 @@ namespace Blockchain.Models
 
         public MultiChainClient RpcClient { get; set; }
 
-        public MultichainModel(string hostname, int port, string name, string rpcUser, string rpcPassword, int localPort)
-        {
-            Hostname = hostname;
-            Port = port;
-            Name = name;
-            RpcUser = rpcUser;
-            RpcPassword = rpcPassword;
-            LocalPort = localPort;
-        }
-
         #region Setup/Teardown
 
         /// <summary>
-        /// Disconnects RPC Client from multichaind
+        ///     Disconnects RPC Client from multichaind
         /// </summary>
         /// <returns></returns>
         public async Task DisconnectRpc()
@@ -57,12 +58,12 @@ namespace Blockchain.Models
         }
 
         /// <summary>
-        /// Connects to a blockchain using RPC
+        ///     Connects to a blockchain using RPC
         /// </summary>
         /// <exception cref="InvalidOperationException">Cannot connect to multichain</exception>
         public async Task ConnectRpc()
         {
-            if (RpcClient != null && Connected)
+            if ((RpcClient != null) && Connected)
                 return;
 
             // Reset, in case we encounter an exception
@@ -71,7 +72,6 @@ namespace Blockchain.Models
 
             await RpcClient.GetInfoAsync();
             Connected = true;
-
         }
 
         #endregion
@@ -111,13 +111,23 @@ namespace Blockchain.Models
             return res.Result;
         }
 
-        public async Task<string> WriteTransaction(object something)
+        public async Task<string> WriteTransaction(
+            IEnumerable<CreateRawTransactionTxIn> txIds,
+            IEnumerable<CreateRawTransactionAmount> assets,
+            object data = null)
         {
-            var tx = await RpcClient.CreateRawTransactionAync();
-            var txId = tx.Result;
-            await RpcClient.AppendRawDataAsync(txId, something);
-            await RpcClient.SendRawTransactionAsync(txId);
-            return txId;
+            var blobRes = await RpcClient.CreateRawTransactionAync(txIds, assets);
+            var blob = blobRes.Result;
+            if (data != null)
+            {
+                var jsonData = JsonConvert.SerializeObject(data);
+                var bytes = Encoding.UTF8.GetBytes(jsonData);
+                blobRes = await RpcClient.AppendRawDataAsync(blob, MultiChainClient.FormatHex(bytes));
+                blob = blobRes.Result;
+            }
+            var signedRes = await RpcClient.SignRawTransactionAsync(blob);
+            var txId = await RpcClient.SendRawTransactionAsync(signedRes.Result.Hex);
+            return txId.Result;
         }
 
         public async Task<string> WriteToStream(string stream, string key, object data)
@@ -132,6 +142,58 @@ namespace Blockchain.Models
         {
             var res = await RpcClient.ListStreamKeyItems(stream, key);
             return res.Result;
+        }
+
+        public async Task<string> GetNewWalletAddress()
+        {
+            var res = await RpcClient.GetNewAddressAsync();
+            return res.Result;
+        }
+
+        public async Task<List<TransactionDetailsResponse>> GetWalletTransactions()
+        {
+            var res = await RpcClient.ListWalletTransactions();
+            return res.Result;
+        }
+
+        public async Task<List<TransactionDetailsResponse>> GetAddressTransactions(string address)
+        {
+            var res = await RpcClient.ListAddressTransactionsAsync(address);
+            return res.Result;
+        }
+
+        public async Task<string> IssueVote(string to)
+        {
+            var assets = await RpcClient.ListAssetsAsync();
+            if (assets.Result.Any(a => a.Name == MultiChainTools.VOTE_ASSET_NAME))
+            {
+                var res = await RpcClient.IssueMoreAsync(to, MultiChainTools.VOTE_ASSET_NAME, 1);
+                return res.Result;
+            }
+            else
+            {
+                var assetParams = new
+                {
+                    name = MultiChainTools.VOTE_ASSET_NAME,
+                    open = true
+                };
+                var res = await RpcClient.IssueAsync(to, assetParams, 1, 1);
+                return res.Result;
+            }
+        }
+
+        public async Task<List<BlockchainQuestionModel>> GetQuestions()
+        {
+            // TODO: Handle multiple questions. For now assume exactly 1
+            var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
+            var hex = result.First().Data;
+
+            var bytes = MultiChainClient.ParseHexString(hex);
+            var text = Encoding.UTF8.GetString(bytes);
+            return new List<BlockchainQuestionModel>
+            {
+                JsonConvert.DeserializeObject<BlockchainQuestionModel>(text)
+            };
         }
 
         #endregion

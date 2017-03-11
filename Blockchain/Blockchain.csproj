@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -45,8 +49,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RsaTools.cs" />
     <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
+    <Compile Include="Models\BlindedMessage.cs" />
+    <Compile Include="Models\BlockchainAnswerModel.cs" />
     <Compile Include="Models\BlockchainQuestionModel.cs" />
     <Compile Include="Models\EPortType.cs" />
     <Compile Include="Models\MultichainModel.cs" />

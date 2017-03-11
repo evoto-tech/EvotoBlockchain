@@ -48,7 +48,7 @@ namespace Blockchain
                     continue;
                 }
 
-                myParams[parts[0].Trim()] = ParseValue(parts[1].Trim());
+                myParams[parts[0].Trim()] = ValueIn(parts[1].Trim());
             }
             return myParams;
         }
@@ -64,6 +64,15 @@ namespace Blockchain
             File.WriteAllText(fileName, text);
         }
 
+        private static dynamic ValueIn(string value)
+        {
+            if (value == "[null]")
+            {
+                return null;
+            }
+            return value;
+        }
+
         private static string ValueOut(dynamic value)
         {
             if (value == null)
@@ -73,28 +82,6 @@ namespace Blockchain
                 return value.ToString().ToLower();
 
             return value.ToString();
-        }
-
-        private static dynamic ParseValue(string value)
-        {
-            bool b;
-            if (bool.TryParse(value, out b))
-                return b;
-
-            int i;
-            if (int.TryParse(value, out i))
-                return i;
-
-            double d;
-            if (double.TryParse(value, out d))
-                return d;
-
-            if (value == "[null]")
-                return null;
-
-            // Hex values are stored as strings
-
-            return value;
         }
     }
 }
