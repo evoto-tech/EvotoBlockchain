@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
+    <Compile Include="Models\BlockchainAnswerModel.cs" />
     <Compile Include="Models\BlockchainQuestionModel.cs" />
     <Compile Include="Models\EPortType.cs" />
     <Compile Include="Models\MultichainModel.cs" />
