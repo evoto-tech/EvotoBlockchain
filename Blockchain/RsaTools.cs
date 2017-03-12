@@ -104,18 +104,24 @@ namespace Blockchain
         public static AsymmetricCipherKeyPair LoadKeysFromFile(string name)
         {
             // Relies on existing "installation" of private key in home dir
-            var folder = Environment.GetEnvironmentVariable("HOMEPATH");
+            var drive = Environment.GetEnvironmentVariable("HOMEDRIVE");
+            if (drive == null)
+                throw new Exception("HOMEDRIVE not set");
 
+            var folder = Environment.GetEnvironmentVariable("HOMEPATH");
             if (folder == null)
                 throw new Exception("HOMEPATH not set");
 
-            var privateKeyFile = Path.Combine(folder, KEY_FOLDER, name + ".pem");
+            if (!name.Contains("."))
+                name += ".pem";
+
+            var privateKeyFile = drive + Path.Combine(folder, KEY_FOLDER, name);
             if (!File.Exists(privateKeyFile))
                 throw new Exception($"Key not found ({name})");
 
             using (var reader = File.OpenText(privateKeyFile))
             {
-                return (AsymmetricCipherKeyPair) new PemReader(reader).ReadObject();
+                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
             }
         }
     }
