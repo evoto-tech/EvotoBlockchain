@@ -6,5 +6,8 @@ namespace Blockchain.Models
     {
         [DataMember(Name = "answer")]
         public string Answer { get; set; }
+
+        [DataMember(Name = "info")]
+        public string Info { get; set; }
     }
 }

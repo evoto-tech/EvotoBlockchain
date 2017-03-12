@@ -9,6 +9,6 @@ namespace Blockchain.Models
         public string Question { get; set; }
 
         [DataMember(Name = "answers")]
-        public List<string> Answers { get; set; }
+        public List<BlockchainAnswerModel> Answers { get; set; }
     }
 }

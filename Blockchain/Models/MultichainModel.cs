@@ -184,16 +184,16 @@ namespace Blockchain.Models
 
         public async Task<List<BlockchainQuestionModel>> GetQuestions()
         {
-            // TODO: Handle multiple questions. For now assume exactly 1
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
-            var hex = result.First().Data;
 
-            var bytes = MultiChainClient.ParseHexString(hex);
-            var text = Encoding.UTF8.GetString(bytes);
-            return new List<BlockchainQuestionModel>
-            {
-                JsonConvert.DeserializeObject<BlockchainQuestionModel>(text)
-            };
+            return result.Select(StreamToQuestion).ToList();
+        }
+
+        private static BlockchainQuestionModel StreamToQuestion(ListStreamKeyItemsResponse r)
+        {
+            var questionBytes = MultiChainClient.ParseHexString(r.Data);
+            var questionJson = Encoding.UTF8.GetString(questionBytes);
+            return JsonConvert.DeserializeObject<BlockchainQuestionModel>(questionJson);
         }
 
         #endregion
