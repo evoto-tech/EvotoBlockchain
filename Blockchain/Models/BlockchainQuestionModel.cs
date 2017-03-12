@@ -11,6 +11,9 @@ namespace Blockchain.Models
         [DataMember(Name = "question")]
         public string Question { get; set; }
 
+        [DataMember(Name = "info")]
+        public string Info { get; set; }
+
         [DataMember(Name = "answers")]
         public List<BlockchainAnswerModel> Answers { get; set; }
     }
