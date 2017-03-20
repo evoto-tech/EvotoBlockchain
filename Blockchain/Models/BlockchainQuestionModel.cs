@@ -5,10 +5,16 @@ namespace Blockchain.Models
 {
     public class BlockchainQuestionModel
     {
+        [DataMember(Name = "num")]
+        public int Number { get; set; }
+
         [DataMember(Name = "question")]
         public string Question { get; set; }
 
+        [DataMember(Name = "info")]
+        public string Info { get; set; }
+
         [DataMember(Name = "answers")]
-        public List<string> Answers { get; set; }
+        public List<BlockchainAnswerModel> Answers { get; set; }
     }
 }

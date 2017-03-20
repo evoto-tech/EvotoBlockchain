@@ -2,12 +2,12 @@
 
 namespace Blockchain.Models
 {
-    public class BlockchainAnswerModel
+    public class BlockchainVoteAnswerModel
     {
+        [DataMember(Name = "question")]
+        public int Question { get; set; }
+
         [DataMember(Name = "answer")]
         public string Answer { get; set; }
-
-        [DataMember(Name = "info")]
-        public string Info { get; set; }
     }
 }
