@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MultiChainLib.Client;
 using MultiChainLib.Model;
@@ -156,10 +157,79 @@ namespace Blockchain.Models
             return res.Result;
         }
 
-        public async Task<List<TransactionDetailsResponse>> GetAddressTransactions(string address)
+        public async Task<List<TransactionDetailsResponse>> GetSelfAddressTransactions(string address)
         {
             var res = await RpcClient.ListAddressTransactionsAsync(address);
             return res.Result;
+        }
+
+        public async Task WaitUntilBlockchainSynced(int blocks, TimeSpan? delay = null)
+        {
+            if (!delay.HasValue)
+                delay = TimeSpan.FromSeconds(5);
+
+            int foundBlocks;
+            do
+            {
+                // Always wait at least 5s to allow the user time to read the loading message and appreciate the loading gif
+                await Task.Delay(delay.Value);
+
+                var info = await RpcClient.GetInfoAsync();
+                foundBlocks = info.Result.Blocks;
+
+                Debug.WriteLine($"Loaded {foundBlocks}/{blocks}");
+            } while (foundBlocks < blocks);
+        }
+
+        /// <summary>
+        ///     Unfortunately Multichain only supports getting all transactions for an address in your own wallet
+        ///     Therefore we have to be a little more inventive
+        /// </summary>
+        /// <param name="address"></param>
+        public async Task<IList<VerboseTransactionResponse>> GetAddressTransactions(string address)
+        {
+            var blockchainInfo = await RpcClient.GetInfoAsync();
+
+            var voteTasks = new List<Task<IList<VerboseTransactionResponse>>>(blockchainInfo.Result.Blocks);
+            for (var b = 0; b < blockchainInfo.Result.Blocks; b++)
+            {
+                voteTasks.Add(GetVotesInBlock(b, address));
+            }
+            await Task.WhenAll(voteTasks);
+
+            return voteTasks.SelectMany(v => v.Result).ToList();
+        }
+
+        private async Task<IList<VerboseTransactionResponse>> GetVotesInBlock(int block, string address)
+        {
+            try
+            {
+                var blockInfo = await RpcClient.GetBlockVerboseAsync(block.ToString());
+
+                var txTasks = blockInfo.Result.Tx.Select(tx => GetVotesInTransaction(tx, address)).ToList();
+                await Task.WhenAll(txTasks);
+
+                return txTasks.Where(t => t.Result != null).Select(t => t.Result).ToList();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return new List<VerboseTransactionResponse>(0);
+            }
+        }
+
+        private async Task<VerboseTransactionResponse> GetVotesInTransaction(string transaction, string address)
+        {
+            try
+            {
+                var txInfo = await RpcClient.GetRawTransactionVerboseAsync(transaction);
+                return txInfo.Result.Vout.Any(v => v.Assets.Any()) && txInfo.Result.Data.Any() ? txInfo.Result : null;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return null;
+            }
         }
 
         public async Task<string> IssueVote(string to)
