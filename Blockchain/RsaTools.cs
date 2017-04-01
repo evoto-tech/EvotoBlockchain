@@ -113,7 +113,16 @@ namespace Blockchain
 
             using (var reader = File.OpenText(privateKeyFile))
             {
-                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                return (AsymmetricCipherKeyPair) new PemReader(reader).ReadObject();
+            }
+        }
+
+        public static AsymmetricCipherKeyPair CreateKey(string name)
+        {
+            using (var rsa = new RSACryptoServiceProvider())
+            {
+                var keyInfo = rsa.ExportParameters(true);
+                return DotNetUtilities.GetRsaKeyPair(keyInfo);
             }
         }
 
@@ -127,20 +136,16 @@ namespace Blockchain
                 File.Delete(fileName);
             }
 
-            AsymmetricCipherKeyPair key;
-            using (var rsa = new RSACryptoServiceProvider())
-            {
-                var keyInfo = rsa.ExportParameters(true);
-                key = DotNetUtilities.GetRsaKeyPair(keyInfo);
+            var key = CreateKey(name);
 
-                using (var fileWriter = new StreamWriter(fileName))
-                {
-                    var pem = new PemWriter(fileWriter);
-                    pem.WriteObject(key.Private);
-                    pem.Writer.Flush();
-                    fileWriter.Close();
-                }
+            using (var fileWriter = new StreamWriter(fileName))
+            {
+                var pem = new PemWriter(fileWriter);
+                pem.WriteObject(key.Private);
+                pem.Writer.Flush();
+                fileWriter.Close();
             }
+
             return key;
         }
 
