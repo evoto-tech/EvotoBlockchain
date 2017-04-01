@@ -17,6 +17,7 @@ namespace Blockchain
     public static class RsaTools
     {
         private const string KEY_FOLDER = ".evoto";
+        private const int KeyStrength = 2048;
 
         public static BlindedMessage BlindMessage(string message, AsymmetricKeyParameter publicKey)
         {
@@ -117,9 +118,9 @@ namespace Blockchain
             }
         }
 
-        public static AsymmetricCipherKeyPair CreateKey(string name)
+        public static AsymmetricCipherKeyPair CreateKey()
         {
-            using (var rsa = new RSACryptoServiceProvider())
+            using (var rsa = new RSACryptoServiceProvider(KeyStrength))
             {
                 var keyInfo = rsa.ExportParameters(true);
                 return DotNetUtilities.GetRsaKeyPair(keyInfo);
@@ -136,7 +137,7 @@ namespace Blockchain
                 File.Delete(fileName);
             }
 
-            var key = CreateKey(name);
+            var key = CreateKey();
 
             using (var fileWriter = new StreamWriter(fileName))
             {
