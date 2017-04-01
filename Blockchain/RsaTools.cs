@@ -157,5 +157,23 @@ namespace Blockchain
 
             return drive + Path.Combine(folder, KEY_FOLDER, blockchain + ".pem");
         }
+
+        public static string EncryptMessage(string message, AsymmetricKeyParameter key)
+        {
+            var bytes = Encoding.UTF8.GetBytes(message);
+            var encryptEngine = new Pkcs1Encoding(new RsaEngine());
+            encryptEngine.Init(true, key);
+
+            return Convert.ToBase64String(encryptEngine.ProcessBlock(bytes, 0, bytes.Length));
+        }
+
+        public static string DecryptMessage(string message, AsymmetricKeyParameter key)
+        {
+            var bytes = Convert.FromBase64String(message);
+            var decryptEngine = new Pkcs1Encoding(new RsaEngine());
+            decryptEngine.Init(false, key);
+
+            return Encoding.UTF8.GetString(decryptEngine.ProcessBlock(bytes, 0, bytes.Length));
+        }
     }
 }
