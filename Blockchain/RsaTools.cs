@@ -150,6 +150,19 @@ namespace Blockchain
             return key;
         }
 
+        public static string KeyToString(AsymmetricKeyParameter key)
+        {
+            using (var stringWriter = new StringWriter())
+            {
+                var pem = new PemWriter(stringWriter);
+                pem.WriteObject(key);
+                pem.Writer.Flush();
+                stringWriter.Close();
+
+                return stringWriter.ToString();
+            }
+        }
+
         private static string GetKeyPath(string blockchain)
         {
             // Relies on existing "installation" of private key in home dir
