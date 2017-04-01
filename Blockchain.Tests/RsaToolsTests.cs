@@ -35,5 +35,12 @@ namespace Blockchain.Tests
             // Server
             Assert.IsTrue(RsaTools.VerifySignature(message, signedToken, serverKey.Private));
         }
+
+        [TestMethod]
+        public void CreateKey_Success()
+        {
+            var key = RsaTools.CreateKeyAndSave("test");
+            Assert.IsNotNull(key);
+        }
     }
 }

@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using Blockchain.Models;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
@@ -103,6 +107,45 @@ namespace Blockchain
 
         public static AsymmetricCipherKeyPair LoadKeysFromFile(string name)
         {
+            var privateKeyFile = GetKeyPath(name);
+            if (!File.Exists(privateKeyFile))
+                throw new Exception($"Key not found ({name})");
+
+            using (var reader = File.OpenText(privateKeyFile))
+            {
+                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+            }
+        }
+
+        public static AsymmetricCipherKeyPair CreateKeyAndSave(string name)
+        {
+            var fileName = GetKeyPath(name);
+
+            if (File.Exists(fileName))
+            {
+                Debug.WriteLine($"Deleting existing key: {fileName}");
+                File.Delete(fileName);
+            }
+
+            AsymmetricCipherKeyPair key;
+            using (var rsa = new RSACryptoServiceProvider())
+            {
+                var keyInfo = rsa.ExportParameters(true);
+                key = DotNetUtilities.GetRsaKeyPair(keyInfo);
+
+                using (var fileWriter = new StreamWriter(fileName))
+                {
+                    var pem = new PemWriter(fileWriter);
+                    pem.WriteObject(key.Private);
+                    pem.Writer.Flush();
+                    fileWriter.Close();
+                }
+            }
+            return key;
+        }
+
+        private static string GetKeyPath(string blockchain)
+        {
             // Relies on existing "installation" of private key in home dir
             var drive = Environment.GetEnvironmentVariable("HOMEDRIVE");
             if (drive == null)
@@ -112,17 +155,7 @@ namespace Blockchain
             if (folder == null)
                 throw new Exception("HOMEPATH not set");
 
-            if (!name.Contains("."))
-                name += ".pem";
-
-            var privateKeyFile = drive + Path.Combine(folder, KEY_FOLDER, name);
-            if (!File.Exists(privateKeyFile))
-                throw new Exception($"Key not found ({name})");
-
-            using (var reader = File.OpenText(privateKeyFile))
-            {
-                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
-            }
+            return drive + Path.Combine(folder, KEY_FOLDER, blockchain + ".pem");
         }
     }
 }
