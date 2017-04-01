@@ -163,6 +163,15 @@ namespace Blockchain
             }
         }
 
+
+        public static AsymmetricKeyParameter KeyFromString(string str)
+        {
+            using (var reader = new StringReader(str))
+            {
+                return (AsymmetricKeyParameter)new PemReader(reader).ReadObject();
+            }
+        }
+
         private static string GetKeyPath(string blockchain)
         {
             // Relies on existing "installation" of private key in home dir

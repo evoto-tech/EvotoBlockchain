@@ -42,5 +42,15 @@ namespace Blockchain.Tests
             var key = RsaTools.CreateKeyAndSave("test");
             Assert.IsNotNull(key);
         }
+
+        [TestMethod]
+        public void CreateKeyToStringAndBack()
+        {
+            var key = RsaTools.CreateKey();
+            var str = RsaTools.KeyToString(key.Public);
+            var key2 = RsaTools.KeyFromString(str);
+            
+            Assert.AreEqual(key.Public, key2);
+        }
     }
 }
