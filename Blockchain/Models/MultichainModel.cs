@@ -162,36 +162,35 @@ namespace Blockchain.Models
             return res.Result;
         }
 
-        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string encryptKey,
+        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string decryptKey,
             string blockchainName)
         {
             // Get the votes, aka transactions to our wallet ID
             var votes = await GetAddressTransactions(walletId);
 
-            List<BlockchainVoteModelPlainText> answers;
-            if (string.IsNullOrWhiteSpace(encryptKey))
-            {
-                // Plain text answers
-                answers = votes
-                    .Select(v => MultiChainClient.ParseHexString(v.Data.First()))
-                    .Select(Encoding.UTF8.GetString)
-                    .Select(JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>).ToList();
-            }
-            else
-            {
-                var privKey = RsaTools.LoadKeysFromFile(blockchainName + "");
-                // Read and decrypt answers
-                var encrypted = votes
-                    .Select(v => MultiChainClient.ParseHexString(v.Data.First()))
-                    .Select(Encoding.UTF8.GetString)
-                    .Select(JsonConvert.DeserializeObject<BlockchainVoteModelEncrypted>).ToList();
-
-                answers = encrypted.Select(e => RsaTools.DecryptMessage(e.Answers, privKey.Private))
-                    .Select(a => new BlockchainVoteModelPlainText
+            // Plain text answers
+            var answers = votes
+                .Select(v =>
+                {
+                    try
                     {
-                        Answers = JsonConvert.DeserializeObject<List<BlockchainVoteAnswerModel>>(a)
-                    }).ToList();
-            }
+                        var voteBytes = MultiChainClient.ParseHexString(v.Data.First());
+                        var voteStr = Encoding.UTF8.GetString(voteBytes);
+                        if (string.IsNullOrWhiteSpace(decryptKey))
+                        {
+                            var key = RsaTools.KeyFromString(decryptKey);
+                            voteStr = RsaTools.DecryptMessage(voteStr, key);
+                        }
+                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(voteStr);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine($"Error reading vote. {e.Message}");
+                        return null;
+                    }
+                })
+                .Where(v => v != null).ToList();
+
             return answers;
         }
 
