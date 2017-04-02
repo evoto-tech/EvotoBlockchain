@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MultiChainLib.Client;
 using MultiChainLib.Model;
@@ -150,13 +151,13 @@ namespace Blockchain.Models
             return res.Result;
         }
 
-        public async Task<List<TransactionDetailsResponse>> GetWalletTransactions()
+        public async Task<List<TransactionDetailsResponse>> GetWalletTransactions(int count = 10, int skip = 0)
         {
-            var res = await RpcClient.ListWalletTransactions();
+            var res = await RpcClient.ListWalletTransactions(count, skip);
             return res.Result;
         }
 
-        public async Task<List<TransactionDetailsResponse>> GetAddressTransactions(string address)
+        public async Task<List<TransactionDetailsResponse>> GetSelfAddressTransactions(string address)
         {
             var res = await RpcClient.ListAddressTransactionsAsync(address);
             return res.Result;
@@ -196,6 +197,42 @@ namespace Blockchain.Models
                     }
                 })
                 .Where(v => v != null).ToList();
+        }
+
+        public async Task WaitUntilBlockchainSynced(int blocks, TimeSpan? delay = null)
+        {
+            if (!delay.HasValue)
+                delay = TimeSpan.FromSeconds(5);
+
+            int foundBlocks;
+            do
+            {
+                // Always wait at least 5s to allow the user time to read the loading message and appreciate the loading gif
+                await Task.Delay(delay.Value);
+
+                var info = await RpcClient.GetInfoAsync();
+                foundBlocks = info.Result.Blocks;
+
+                Debug.WriteLine($"Loaded {foundBlocks}/{blocks}");
+            } while (foundBlocks < blocks);
+        }
+
+        /// <summary>
+        ///     Gets transactions for an address. If the address is not in our wallet, it adds it first.
+        ///     This can be slow and involve reindexing the blockchain
+        /// </summary>
+        /// <param name="address"></param>
+        public async Task<IList<TransactionDetailsResponse>> GetAddressTransactions(string address)
+        {
+            var addressesInWallet = await RpcClient.GetAddressesAsync();
+
+            if (!addressesInWallet.Result.Contains(address))
+            {
+                await RpcClient.ImportAddressAsync(address);
+            }
+
+            var txs = await RpcClient.ListAddressTransactionsAsync(address, 100000);
+            return txs.Result;
         }
 
         public async Task<string> IssueVote(string to)
