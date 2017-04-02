@@ -163,12 +163,19 @@ namespace Blockchain
             }
         }
 
-
-        public static AsymmetricKeyParameter KeyFromString(string str)
+        public static AsymmetricKeyParameter PublicKeyFromString(string str)
         {
             using (var reader = new StringReader(str))
             {
                 return (AsymmetricKeyParameter)new PemReader(reader).ReadObject();
+            }
+        }
+
+        public static AsymmetricCipherKeyPair KeyPairFromString(string str)
+        {
+            using (var reader = new StringReader(str))
+            {
+                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
             }
         }
 

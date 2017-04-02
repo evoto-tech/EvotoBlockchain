@@ -44,13 +44,24 @@ namespace Blockchain.Tests
         }
 
         [TestMethod]
-        public void CreateKeyToStringAndBack()
+        public void CreatePublicKeyToStringAndBack()
         {
             var key = RsaTools.CreateKey();
             var str = RsaTools.KeyToString(key.Public);
-            var key2 = RsaTools.KeyFromString(str);
+            var key2 = RsaTools.PublicKeyFromString(str);
             
             Assert.AreEqual(key.Public, key2);
+        }
+
+        [TestMethod]
+        public void CreateKeypairToStringAndBack()
+        {
+            var key = RsaTools.CreateKey();
+            var str = RsaTools.KeyToString(key.Private);
+            var key2 = RsaTools.KeyPairFromString(str);
+
+            Assert.AreEqual(key.Public, key2.Public);
+            Assert.AreEqual(key.Private, key2.Private);
         }
     }
 }

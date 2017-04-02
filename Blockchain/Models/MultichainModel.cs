@@ -178,8 +178,8 @@ namespace Blockchain.Models
                         var voteStr = Encoding.UTF8.GetString(voteBytes);
                         if (!string.IsNullOrWhiteSpace(decryptKey))
                         {
-                            var key = RsaTools.KeyFromString(decryptKey);
-                            voteStr = RsaTools.DecryptMessage(voteStr, key);
+                            var key = RsaTools.KeyPairFromString(decryptKey);
+                            voteStr = RsaTools.DecryptMessage(voteStr, key.Private);
                         }
                         return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(voteStr);
                     }
