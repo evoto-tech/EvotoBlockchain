@@ -11,9 +11,14 @@ namespace Blockchain.Models
 
         public BlockchainVoteModelPlainText Decrypt(string keyStr)
         {
+            // Get key for decryption from string
             var key = RsaTools.KeyPairFromString(keyStr);
+            // Decrypt answers
             var plainAnswersStr = RsaTools.DecryptMessage(Answers, key.Private);
+            // Read into answer models
             var answers = JsonConvert.DeserializeObject<List<BlockchainVoteAnswerModel>>(plainAnswersStr);
+
+            // Convert to regular model
             return new BlockchainVoteModelPlainText
             {
                 Answers = answers
