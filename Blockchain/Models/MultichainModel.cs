@@ -162,6 +162,39 @@ namespace Blockchain.Models
             return res.Result;
         }
 
+        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string encryptKey,
+            string blockchainName)
+        {
+            // Get the votes, aka transactions to our wallet ID
+            var votes = await GetAddressTransactions(walletId);
+
+            List<BlockchainVoteModelPlainText> answers;
+            if (string.IsNullOrWhiteSpace(encryptKey))
+            {
+                // Plain text answers
+                answers = votes
+                    .Select(v => MultiChainClient.ParseHexString(v.Data.First()))
+                    .Select(Encoding.UTF8.GetString)
+                    .Select(JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>).ToList();
+            }
+            else
+            {
+                var privKey = RsaTools.LoadKeysFromFile(blockchainName + "");
+                // Read and decrypt answers
+                var encrypted = votes
+                    .Select(v => MultiChainClient.ParseHexString(v.Data.First()))
+                    .Select(Encoding.UTF8.GetString)
+                    .Select(JsonConvert.DeserializeObject<BlockchainVoteModelEncrypted>).ToList();
+
+                answers = encrypted.Select(e => RsaTools.DecryptMessage(e.Answers, privKey.Private))
+                    .Select(a => new BlockchainVoteModelPlainText
+                    {
+                        Answers = JsonConvert.DeserializeObject<List<BlockchainVoteAnswerModel>>(a)
+                    }).ToList();
+            }
+            return answers;
+        }
+
         public async Task<string> IssueVote(string to)
         {
             var assets = await RpcClient.ListAssetsAsync();
