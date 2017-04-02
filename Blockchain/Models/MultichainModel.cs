@@ -168,7 +168,6 @@ namespace Blockchain.Models
             // Get the votes, aka transactions to our wallet ID
             var votes = await GetAddressTransactions(walletId);
 
-            // Plain text answers
             var answers = votes
                 .Select(v =>
                 {
@@ -178,10 +177,10 @@ namespace Blockchain.Models
                         var voteStr = Encoding.UTF8.GetString(voteBytes);
                         if (!string.IsNullOrWhiteSpace(decryptKey))
                         {
-                            var key = RsaTools.KeyPairFromString(decryptKey);
-                            voteStr = RsaTools.DecryptMessage(voteStr, key.Private);
+                            var encrypted = JsonConvert.DeserializeObject<BlockchainVoteModelEncrypted>(voteStr);
+                            return encrypted.Decrypt(decryptKey);
                         }
-                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(voteStr);
+                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(v.Data.First());
                     }
                     catch (Exception e)
                     {
