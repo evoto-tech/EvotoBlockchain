@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 
 namespace Blockchain.Models
 {
-    public class BlockchainVoteModelPlainText : BlockchainVoteModelBase
+    public class BlockchainVoteModelPlainText
     {
         [DataMember(Name = "answers")]
         public List<BlockchainVoteAnswerModel> Answers { get; set; }

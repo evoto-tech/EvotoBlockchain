@@ -163,6 +163,42 @@ namespace Blockchain.Models
             return res.Result;
         }
 
+        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string decryptKey,
+            string blockchainName)
+        {
+            // Get the votes, aka transactions to our wallet ID
+            var votes = await GetAddressTransactions(walletId);
+
+            // Read into models, decrypting if necessary
+            return votes
+                .Select(v =>
+                {
+                    try
+                    {
+                        // Read vote data hex
+                        var voteBytes = MultiChainClient.ParseHexString(v.Data.First());
+                        // Convert to string
+                        var voteStr = Encoding.UTF8.GetString(voteBytes);
+
+                        // Decrypt string if necessary
+                        if (!string.IsNullOrWhiteSpace(decryptKey))
+                        {
+                            // Read into model (not all parts of the vote are encrypted)
+                            var encrypted = JsonConvert.DeserializeObject<BlockchainVoteModelEncrypted>(voteStr);
+                            // Convert to regular vote model
+                            return encrypted.Decrypt(decryptKey);
+                        }
+                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(v.Data.First());
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine($"Error reading vote. {e.Message}");
+                        return null;
+                    }
+                })
+                .Where(v => v != null).ToList();
+        }
+
         public async Task WaitUntilBlockchainSynced(int blocks, TimeSpan? delay = null)
         {
             if (!delay.HasValue)
