@@ -176,7 +176,7 @@ namespace Blockchain.Models
                     {
                         var voteBytes = MultiChainClient.ParseHexString(v.Data.First());
                         var voteStr = Encoding.UTF8.GetString(voteBytes);
-                        if (string.IsNullOrWhiteSpace(decryptKey))
+                        if (!string.IsNullOrWhiteSpace(decryptKey))
                         {
                             var key = RsaTools.KeyFromString(decryptKey);
                             voteStr = RsaTools.DecryptMessage(voteStr, key);
