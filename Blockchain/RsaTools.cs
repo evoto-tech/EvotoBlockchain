@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using Blockchain.Models;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
@@ -13,6 +17,7 @@ namespace Blockchain
     public static class RsaTools
     {
         private const string KEY_FOLDER = ".evoto";
+        private const int KeyStrength = 2048;
 
         public static BlindedMessage BlindMessage(string message, AsymmetricKeyParameter publicKey)
         {
@@ -103,6 +108,72 @@ namespace Blockchain
 
         public static AsymmetricCipherKeyPair LoadKeysFromFile(string name)
         {
+            var privateKeyFile = GetKeyPath(name);
+            if (!File.Exists(privateKeyFile))
+                throw new Exception($"Key not found ({name})");
+
+            using (var reader = File.OpenText(privateKeyFile))
+            {
+                return (AsymmetricCipherKeyPair) new PemReader(reader).ReadObject();
+            }
+        }
+
+        public static AsymmetricCipherKeyPair CreateKey()
+        {
+            using (var rsa = new RSACryptoServiceProvider(KeyStrength))
+            {
+                var keyInfo = rsa.ExportParameters(true);
+                return DotNetUtilities.GetRsaKeyPair(keyInfo);
+            }
+        }
+
+        public static AsymmetricCipherKeyPair CreateKeyAndSave(string name)
+        {
+            var fileName = GetKeyPath(name);
+
+            if (File.Exists(fileName))
+            {
+                Debug.WriteLine($"Deleting existing key: {fileName}");
+                File.Delete(fileName);
+            }
+
+            var key = CreateKey();
+
+            using (var fileWriter = new StreamWriter(fileName))
+            {
+                var pem = new PemWriter(fileWriter);
+                pem.WriteObject(key.Private);
+                pem.Writer.Flush();
+                fileWriter.Close();
+            }
+
+            return key;
+        }
+
+        public static string KeyToString(AsymmetricKeyParameter key)
+        {
+            using (var stringWriter = new StringWriter())
+            {
+                var pem = new PemWriter(stringWriter);
+                pem.WriteObject(key);
+                pem.Writer.Flush();
+                stringWriter.Close();
+
+                return stringWriter.ToString();
+            }
+        }
+
+
+        public static AsymmetricKeyParameter KeyFromString(string str)
+        {
+            using (var reader = new StringReader(str))
+            {
+                return (AsymmetricKeyParameter)new PemReader(reader).ReadObject();
+            }
+        }
+
+        private static string GetKeyPath(string blockchain)
+        {
             // Relies on existing "installation" of private key in home dir
             var drive = Environment.GetEnvironmentVariable("HOMEDRIVE");
             if (drive == null)
@@ -112,17 +183,25 @@ namespace Blockchain
             if (folder == null)
                 throw new Exception("HOMEPATH not set");
 
-            if (!name.Contains("."))
-                name += ".pem";
+            return drive + Path.Combine(folder, KEY_FOLDER, blockchain + ".pem");
+        }
 
-            var privateKeyFile = drive + Path.Combine(folder, KEY_FOLDER, name);
-            if (!File.Exists(privateKeyFile))
-                throw new Exception($"Key not found ({name})");
+        public static string EncryptMessage(string message, AsymmetricKeyParameter key)
+        {
+            var bytes = Encoding.UTF8.GetBytes(message);
+            var encryptEngine = new Pkcs1Encoding(new RsaEngine());
+            encryptEngine.Init(true, key);
 
-            using (var reader = File.OpenText(privateKeyFile))
-            {
-                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
-            }
+            return Convert.ToBase64String(encryptEngine.ProcessBlock(bytes, 0, bytes.Length));
+        }
+
+        public static string DecryptMessage(string message, AsymmetricKeyParameter key)
+        {
+            var bytes = Convert.FromBase64String(message);
+            var decryptEngine = new Pkcs1Encoding(new RsaEngine());
+            decryptEngine.Init(false, key);
+
+            return Encoding.UTF8.GetString(decryptEngine.ProcessBlock(bytes, 0, bytes.Length));
         }
     }
 }

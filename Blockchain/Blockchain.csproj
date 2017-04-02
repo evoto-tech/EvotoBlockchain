@@ -35,7 +35,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(SolutionDir)\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -50,7 +50,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\BlockchainVoteAnswerModel.cs" />
-    <Compile Include="Models\BlockchainVoteModel.cs" />
+    <Compile Include="Models\BlockchainVoteModelBase.cs" />
+    <Compile Include="Models\BlockchainVoteModelEncrypted.cs" />
+    <Compile Include="Models\BlockchainVoteModelPlainText.cs" />
     <Compile Include="RsaTools.cs" />
     <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
