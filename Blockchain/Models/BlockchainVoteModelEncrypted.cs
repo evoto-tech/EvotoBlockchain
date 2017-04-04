@@ -6,6 +6,9 @@ namespace Blockchain.Models
 {
     public class BlockchainVoteModelEncrypted
     {
+        [DataMember(Name="magicWords")]
+        public string MagicWords { get; set; }
+
         [DataMember(Name = "answers")]
         public string Answers { get; set; }
 
@@ -21,6 +24,7 @@ namespace Blockchain.Models
             // Convert to regular model
             return new BlockchainVoteModelPlainText
             {
+                MagicWords = MagicWords,
                 Answers = answers
             };
         }
