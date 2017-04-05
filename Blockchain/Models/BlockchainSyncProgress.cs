@@ -20,7 +20,7 @@
             if (TotalBlocks - StartBlocks == 0)
                 Percentage = 100;
             else
-                Percentage = (CurrentBlocks - StartBlocks)/(double)(TotalBlocks - StartBlocks)*100;
+                Percentage = 100 * (CurrentBlocks - StartBlocks)/(double)(TotalBlocks - StartBlocks);
         }
     }
 }
