@@ -199,17 +199,11 @@ namespace Blockchain.Models
                 .Where(v => v != null).ToList();
         }
 
-        public async Task WaitUntilBlockchainSynced(int blocks, TimeSpan? delay = null)
+        public async Task WaitUntilBlockchainSynced(int blocks)
         {
-            if (!delay.HasValue)
-                delay = TimeSpan.FromSeconds(5);
-
             int foundBlocks;
             do
             {
-                // Always wait at least 5s to allow the user time to read the loading message and appreciate the loading gif
-                await Task.Delay(delay.Value);
-
                 var info = await RpcClient.GetInfoAsync();
                 foundBlocks = info.Result.Blocks;
 
