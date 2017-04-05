@@ -162,8 +162,7 @@ namespace Blockchain.Models
             return res.Result;
         }
 
-        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string decryptKey,
-            string blockchainName)
+        public async Task<List<BlockchainVoteModelPlainText>> GetResults(string walletId, string decryptKey)
         {
             // Get the votes, aka transactions to our wallet ID
             var votes = await GetAddressTransactions(walletId);
@@ -265,6 +264,17 @@ namespace Blockchain.Models
             var questionBytes = MultiChainClient.ParseHexString(r.Data);
             var questionJson = Encoding.UTF8.GetString(questionBytes);
             return JsonConvert.DeserializeObject<BlockchainQuestionModel>(questionJson);
+        }
+
+        /// <summary>
+        /// Returns true if the words are already on the blockchain
+        /// </summary>
+        public async Task<bool> CheckMagicWordsNotOnBlockchain(string words, string voteAddress)
+        {
+            // Get vote results, doesn't matter if they're encrypted as words always in plaintext
+            var results = await GetResults(voteAddress, "");
+
+            return results.Any(r => r.MagicWords == words);
         }
 
         #endregion
