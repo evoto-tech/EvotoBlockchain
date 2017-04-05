@@ -17,7 +17,10 @@
         public void Update(int currentBlocks)
         {
             CurrentBlocks = currentBlocks;
-            Percentage = (CurrentBlocks - StartBlocks)/(double)(TotalBlocks - StartBlocks);
+            if (TotalBlocks - StartBlocks == 0)
+                Percentage = 100;
+            else
+                Percentage = (CurrentBlocks - StartBlocks)/(double)(TotalBlocks - StartBlocks)*100;
         }
     }
 }
