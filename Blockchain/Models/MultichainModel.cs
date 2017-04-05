@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using MultiChainLib.Client;
 using MultiChainLib.Model;
@@ -199,16 +198,23 @@ namespace Blockchain.Models
                 .Where(v => v != null).ToList();
         }
 
-        public async Task WaitUntilBlockchainSynced(int blocks)
+        public async Task WaitUntilBlockchainSynced(int totalBlocks, IProgress<BlockchainSyncProgress> progress)
         {
-            int foundBlocks;
-            do
+            var info = await RpcClient.GetInfoAsync();
+            var foundBlocks = info.Result.Blocks;
+
+            var progressModel = new BlockchainSyncProgress(foundBlocks, totalBlocks);
+
+            while (foundBlocks < totalBlocks)
             {
-                var info = await RpcClient.GetInfoAsync();
+                info = await RpcClient.GetInfoAsync();
                 foundBlocks = info.Result.Blocks;
 
-                Debug.WriteLine($"Loaded {foundBlocks}/{blocks}");
-            } while (foundBlocks < blocks);
+                progressModel.Update(foundBlocks);
+                progress.Report(progressModel);
+
+                Debug.WriteLine($"Loaded {foundBlocks}/{totalBlocks}");
+            }
         }
 
         /// <summary>
@@ -221,9 +227,7 @@ namespace Blockchain.Models
             var addressesInWallet = await RpcClient.GetAddressesAsync();
 
             if (!addressesInWallet.Result.Contains(address))
-            {
                 await RpcClient.ImportAddressAsync(address);
-            }
 
             var txs = await RpcClient.ListAddressTransactionsAsync(address, 100000);
             return txs.Result;
