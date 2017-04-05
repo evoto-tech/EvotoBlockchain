@@ -258,14 +258,21 @@ namespace Blockchain.Models
         {
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
 
-            return result.Select(StreamToQuestion).ToList();
+            return result.Select(StreamToModel<BlockchainQuestionModel>).ToList();
         }
 
-        private static BlockchainQuestionModel StreamToQuestion(ListStreamKeyItemsResponse r)
+        public async Task<List<BlockchainVoterModel>> GetVoters()
         {
-            var questionBytes = MultiChainClient.ParseHexString(r.Data);
-            var questionJson = Encoding.UTF8.GetString(questionBytes);
-            return JsonConvert.DeserializeObject<BlockchainQuestionModel>(questionJson);
+            var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.VOTERS_KEY);
+
+            return result.Select(StreamToModel<BlockchainVoterModel>).ToList();
+        }
+
+        private static T StreamToModel<T>(ListStreamKeyItemsResponse r)
+        {
+            var modelBytes = MultiChainClient.ParseHexString(r.Data);
+            var bytesJson = Encoding.UTF8.GetString(modelBytes);
+            return JsonConvert.DeserializeObject<T>(bytesJson);
         }
 
         /// <summary>
