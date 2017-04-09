@@ -167,7 +167,7 @@ namespace Blockchain
         {
             using (var reader = new StringReader(str))
             {
-                return (AsymmetricKeyParameter)new PemReader(reader).ReadObject();
+                return (AsymmetricKeyParameter) new PemReader(reader).ReadObject();
             }
         }
 
@@ -175,7 +175,7 @@ namespace Blockchain
         {
             using (var reader = new StringReader(str))
             {
-                return (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                return (AsymmetricCipherKeyPair) new PemReader(reader).ReadObject();
             }
         }
 
@@ -190,7 +190,12 @@ namespace Blockchain
             if (folder == null)
                 throw new Exception("HOMEPATH not set");
 
-            return drive + Path.Combine(folder, KEY_FOLDER, blockchain + ".pem");
+            var keyDir = Path.Combine(folder, KEY_FOLDER);
+
+            if (!Directory.Exists(keyDir))
+                Directory.CreateDirectory(keyDir);
+
+            return drive + Path.Combine(keyDir, blockchain + ".pem");
         }
 
         public static string EncryptMessage(string message, AsymmetricKeyParameter key)
