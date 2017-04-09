@@ -53,6 +53,7 @@
     <Compile Include="Models\BlockchainVoteAnswerModel.cs" />
     <Compile Include="Models\BlockchainVoteModelEncrypted.cs" />
     <Compile Include="Models\BlockchainVoteModelPlainText.cs" />
+    <Compile Include="Models\BlockchainVoterModel.cs" />
     <Compile Include="RsaTools.cs" />
     <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
