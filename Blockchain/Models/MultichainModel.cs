@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using MultiChainLib.Client;
 using MultiChainLib.Model;
@@ -198,22 +197,23 @@ namespace Blockchain.Models
                 .Where(v => v != null).ToList();
         }
 
-        public async Task WaitUntilBlockchainSynced(int blocks, TimeSpan? delay = null)
+        public async Task WaitUntilBlockchainSynced(int totalBlocks, IProgress<BlockchainSyncProgress> progress)
         {
-            if (!delay.HasValue)
-                delay = TimeSpan.FromSeconds(5);
+            var info = await RpcClient.GetInfoAsync();
+            var foundBlocks = info.Result.Blocks;
 
-            int foundBlocks;
-            do
+            var progressModel = new BlockchainSyncProgress(foundBlocks, totalBlocks);
+
+            while (foundBlocks < totalBlocks)
             {
-                // Always wait at least 5s to allow the user time to read the loading message and appreciate the loading gif
-                await Task.Delay(delay.Value);
-
-                var info = await RpcClient.GetInfoAsync();
+                info = await RpcClient.GetInfoAsync();
                 foundBlocks = info.Result.Blocks;
 
-                Debug.WriteLine($"Loaded {foundBlocks}/{blocks}");
-            } while (foundBlocks < blocks);
+                progressModel.Update(foundBlocks);
+                progress.Report(progressModel);
+
+                Debug.WriteLine($"Loaded {foundBlocks}/{totalBlocks}");
+            }
         }
 
         /// <summary>
@@ -226,9 +226,7 @@ namespace Blockchain.Models
             var addressesInWallet = await RpcClient.GetAddressesAsync();
 
             if (!addressesInWallet.Result.Contains(address))
-            {
                 await RpcClient.ImportAddressAsync(address);
-            }
 
             var txs = await RpcClient.ListAddressTransactionsAsync(address, 100000);
             return txs.Result;

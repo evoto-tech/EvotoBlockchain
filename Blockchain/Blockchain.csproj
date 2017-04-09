@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\BlockchainSyncProgress.cs" />
     <Compile Include="Models\BlockchainVoteAnswerModel.cs" />
     <Compile Include="Models\BlockchainVoteModelEncrypted.cs" />
     <Compile Include="Models\BlockchainVoteModelPlainText.cs" />
