@@ -29,12 +29,14 @@ namespace Blockchain
         /// <param name="rpcPort">Blockchain local RPC port</param>
         /// <param name="clean">Should clean local blockchain directory?</param>
         /// <returns></returns>
-        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, int localPort, int rpcPort, bool clean = true)
+        public async Task<MultichainModel> Connect(string hostname, string blockchain, int port, int localPort,
+            int rpcPort, bool clean = true)
         {
             MultichainModel chain;
             if (!Connections.TryGetValue(blockchain, out chain))
             {
-                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString(), localPort, rpcPort);
+                chain = new MultichainModel(hostname, port, blockchain, RpcUser, MultiChainTools.RandomString(),
+                    localPort, rpcPort);
                 Connections[blockchain] = chain;
             }
 
@@ -55,9 +57,14 @@ namespace Blockchain
         {
             if (chain.Process != null)
             {
-                if (!chain.Process.HasExited)
+                try
                 {
-                    return chain; 
+                    if (!chain.Process.HasExited)
+                        return chain;
+                }
+                // May throw exception if process has become unassociated
+                catch (InvalidOperationException)
+                {
                 }
                 Debug.WriteLine($"Restarting Multichaind for chain: {chain.Name}!!");
             }
@@ -72,7 +79,8 @@ namespace Blockchain
             if (clean)
                 MultiChainTools.CleanBlockchain(dataDir, chain.Name);
 
-            Debug.WriteLine($"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port} ({chain.LocalPort})");
+            Debug.WriteLine(
+                $"Starting MultiChain connection to {chain.Name}@{chain.Hostname}:{chain.Port} ({chain.LocalPort})");
             Debug.WriteLine($"RPC Data: {RpcUser} : {chain.RpcPassword} : {chain.RpcPort}");
             var pArgs =
                 $"{chain.Name}@{chain.Hostname}:{chain.Port} -daemon -datadir={dataDir} -server -port={chain.LocalPort}" +
