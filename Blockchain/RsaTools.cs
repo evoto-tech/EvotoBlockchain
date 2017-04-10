@@ -181,11 +181,12 @@ namespace Blockchain
 
         private static string GetKeyPath(string blockchain)
         {
-            var drive = Environment.GetEnvironmentVariable("HOMEDRIVE", EnvironmentVariableTarget.User);
+            // Relies on existing "installation" of private key in home dir
+            var drive = Environment.GetEnvironmentVariable("HOMEDRIVE");
             if (drive == null)
                 throw new Exception("HOMEDRIVE not set");
 
-            var folder = Environment.GetEnvironmentVariable("HOMEPATH", EnvironmentVariableTarget.User);
+            var folder = Environment.GetEnvironmentVariable("HOMEPATH");
             if (folder == null)
                 throw new Exception("HOMEPATH not set");
 

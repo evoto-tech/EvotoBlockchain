@@ -76,7 +76,7 @@ namespace Blockchain
         /// <returns>Path of AppData, with optional suffix appended</returns>
         public static string GetAppDataFolder(string relative = "Evoto", bool allowSubDir = true)
         {
-            var appData = Environment.GetEnvironmentVariable("APPDATA", EnvironmentVariableTarget.User);
+            var appData = Environment.GetEnvironmentVariable("APPDATA");
             if (appData == null)
                 throw new SystemException("APPDATA Must be set");
 
