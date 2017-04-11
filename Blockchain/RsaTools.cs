@@ -16,7 +16,7 @@ namespace Blockchain
 {
     public static class RsaTools
     {
-        private const string KEY_FOLDER = ".evoto";
+        private const string KEY_FOLDER = "evoto";
         private const int KeyStrength = 2048;
 
         public static BlindedMessage BlindMessage(string message, AsymmetricKeyParameter publicKey)
@@ -181,21 +181,16 @@ namespace Blockchain
 
         private static string GetKeyPath(string blockchain)
         {
-            // Relies on existing "installation" of private key in home dir
-            var drive = Environment.GetEnvironmentVariable("HOMEDRIVE");
-            if (drive == null)
-                throw new Exception("HOMEDRIVE not set");
-
-            var folder = Environment.GetEnvironmentVariable("HOMEPATH");
+            var folder = Environment.GetEnvironmentVariable("ProgramData");
             if (folder == null)
-                throw new Exception("HOMEPATH not set");
+                throw new SystemException("ProgramData not set");
 
             var keyDir = Path.Combine(folder, KEY_FOLDER);
 
             if (!Directory.Exists(keyDir))
                 Directory.CreateDirectory(keyDir);
 
-            return drive + Path.Combine(keyDir, blockchain + ".pem");
+            return Path.Combine(keyDir, blockchain + ".pem");
         }
 
         public static string EncryptMessage(string message, AsymmetricKeyParameter key)
