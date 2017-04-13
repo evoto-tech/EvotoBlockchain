@@ -67,9 +67,7 @@ namespace Blockchain
         private static dynamic ValueIn(string value)
         {
             if (value == "[null]")
-            {
                 return null;
-            }
             return value;
         }
 
