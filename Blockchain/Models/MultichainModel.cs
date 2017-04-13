@@ -186,7 +186,7 @@ namespace Blockchain.Models
                             // Convert to regular vote model
                             return encrypted.Decrypt(decryptKey);
                         }
-                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(v.Data.First());
+                        return JsonConvert.DeserializeObject<BlockchainVoteModelPlainText>(voteStr);
                     }
                     catch (Exception e)
                     {
