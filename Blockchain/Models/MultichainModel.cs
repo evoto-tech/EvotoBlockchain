@@ -256,25 +256,32 @@ namespace Blockchain.Models
         {
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
 
-            return result.Select(StreamToModel<BlockchainQuestionModel>).ToList();
+            return result.Select(StreamToModel<BlockchainQuestionModel>).Where(m => m != null).ToList();
         }
 
         public async Task<List<BlockchainVoterModel>> GetVoters()
         {
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.VOTERS_KEY);
 
-            return result.Select(StreamToModel<BlockchainVoterModel>).ToList();
+            return result.Select(StreamToModel<BlockchainVoterModel>).Where(m => m != null).ToList();
         }
 
-        private static T StreamToModel<T>(ListStreamKeyItemsResponse r)
+        private static T StreamToModel<T>(ListStreamKeyItemsResponse r) where T : class
         {
-            var modelBytes = MultiChainClient.ParseHexString(r.Data);
-            var bytesJson = Encoding.UTF8.GetString(modelBytes);
-            return JsonConvert.DeserializeObject<T>(bytesJson);
+            try
+            {
+                var modelBytes = MultiChainClient.ParseHexString(r.Data);
+                var bytesJson = Encoding.UTF8.GetString(modelBytes);
+                return JsonConvert.DeserializeObject<T>(bytesJson);
+            }
+            catch (JsonSerializationException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
-        /// Returns true if the words are already on the blockchain
+        ///     Returns true if the words are already on the blockchain
         /// </summary>
         public async Task<bool> CheckMagicWordsNotOnBlockchain(string words, string voteAddress)
         {

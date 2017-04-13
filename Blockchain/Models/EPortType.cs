@@ -22,8 +22,8 @@ namespace Blockchain.Models
         private static readonly Dictionary<EPortType, int> Ports = new Dictionary<EPortType, int>();
 
         /// <summary>
-        /// Clear port memory, meaning allocations will start again from default
-        /// Initially for testing, however this could be needed under other circumstances
+        ///     Clear port memory, meaning allocations will start again from default
+        ///     Initially for testing, however this could be needed under other circumstances
         /// </summary>
         public static void ResetPorts()
         {
@@ -38,7 +38,7 @@ namespace Blockchain.Models
                 Ports[type]++;
                 return port;
             }
-                
+
 
             switch (type)
             {
