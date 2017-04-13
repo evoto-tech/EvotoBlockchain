@@ -128,13 +128,23 @@ namespace Blockchain
             // Read outputs
             chain.Process.BeginOutputReadLine();
             chain.Process.BeginErrorReadLine();
+            chain.Process.EnableRaisingEvents = true;
+
+            chain.Process.Exited += (sender, args) =>
+            {
+                taskCompletion.SetResult(false);
+            };
 
             await Task.Run(() =>
             {
                 if (!taskCompletion.Task.Wait(TimeSpan.FromMinutes(1)))
                 {
                     chain.Process.Kill();
-                    throw new CouldNotStartDaemonException("No Success Message");
+                    throw new CouldNotConnectToBlockchainException("Timed Out");
+                }
+                if (!taskCompletion.Task.Result)
+                {
+                    throw new CouldNotConnectToBlockchainException();
                 }
             });
 
