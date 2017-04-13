@@ -55,7 +55,7 @@
     <Compile Include="Models\BlockchainVoteModelPlainText.cs" />
     <Compile Include="Models\BlockchainVoterModel.cs" />
     <Compile Include="RsaTools.cs" />
-    <Compile Include="Exceptions\CouldNotStartDaemonException.cs" />
+    <Compile Include="Exceptions\CouldNotConnectToBlockchainException.cs" />
     <Compile Include="Exceptions\CouldNotStartProcessException.cs" />
     <Compile Include="Models\BlindedMessage.cs" />
     <Compile Include="Models\BlockchainAnswerModel.cs" />
