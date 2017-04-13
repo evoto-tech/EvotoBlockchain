@@ -132,7 +132,8 @@ namespace Blockchain
 
             chain.Process.Exited += (sender, args) =>
             {
-                taskCompletion.SetResult(false);
+                // May have been disposed
+                taskCompletion.TrySetResult(false);
             };
 
             await Task.Run(() =>
