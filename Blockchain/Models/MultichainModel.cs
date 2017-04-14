@@ -301,13 +301,13 @@ namespace Blockchain.Models
         /// <param name="maxAttempts">Maximum number of times to check if asset allocated</param>
         /// <param name="delayMs">Delay in ms between checks</param>
         /// <returns>True if vote asset found (allocated)</returns>
-        public async Task<bool> ConfirmVoteAllocated(int maxAttempts = 50, int delayMs = 100)
+        public async Task<bool> ConfirmVoteAllocated(int maxAttempts = 240, int delayMs = 500)
         {
             var attemps = 0;
             do
             {
                 var currency = await RpcClient.GetAssetBalancesAsync();
-                if (currency.Result.Any(c => c.AssetRef == MultiChainTools.VOTE_ASSET_NAME))
+                if (currency.Result.Any(c => c.Name == MultiChainTools.VOTE_ASSET_NAME))
                     return true;
                 attemps++;
                 await Task.Delay(delayMs);
