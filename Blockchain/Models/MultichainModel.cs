@@ -117,15 +117,18 @@ namespace Blockchain.Models
             object data = null)
         {
             var blobRes = await RpcClient.CreateRawTransactionAync(txIds, assets);
+            await Task.Delay(500);
             var blob = blobRes.Result;
             if (data != null)
             {
                 var jsonData = JsonConvert.SerializeObject(data);
                 var bytes = Encoding.UTF8.GetBytes(jsonData);
                 blobRes = await RpcClient.AppendRawDataAsync(blob, MultiChainClient.FormatHex(bytes));
+                await Task.Delay(500);
                 blob = blobRes.Result;
             }
             var signedRes = await RpcClient.SignRawTransactionAsync(blob);
+            await Task.Delay(500);
             var txId = await RpcClient.SendRawTransactionAsync(signedRes.Result.Hex);
             return txId.Result;
         }
