@@ -259,14 +259,14 @@ namespace Blockchain.Models
         {
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.QUESTIONS_KEY);
 
-            return result.Select(StreamToModel<BlockchainQuestionModel>).Where(m => m != null).ToList();
+            return Enumerable.Where(result.Select(StreamToModel<BlockchainQuestionModel>), m => m != null).ToList();
         }
 
         public async Task<List<BlockchainVoterModel>> GetVoters()
         {
             var result = await GetStreamKeyItems(MultiChainTools.ROOT_STREAM_NAME, MultiChainTools.VOTERS_KEY);
 
-            return result.Select(StreamToModel<BlockchainVoterModel>).Where(m => m != null).ToList();
+            return Enumerable.Where(result.Select(StreamToModel<BlockchainVoterModel>), m => m != null).ToList();
         }
 
         private static T StreamToModel<T>(ListStreamKeyItemsResponse r) where T : class
@@ -292,6 +292,30 @@ namespace Blockchain.Models
             var results = await GetResults(voteAddress, "");
 
             return results.Any(r => r.MagicWords == words);
+        }
+
+        /// <summary>
+        ///     Waits until currency has been assigned to the current wallet
+        ///     Returns true if successful
+        /// </summary>
+        /// <param name="maxAttempts">Maximum number of times to check if asset allocated</param>
+        /// <param name="delayMs">Delay in ms between checks</param>
+        /// <returns>True if vote asset found (allocated)</returns>
+        public async Task<bool> ConfirmVoteAllocated(int maxAttempts = 50, int delayMs = 100)
+        {
+            var attemps = 0;
+            do
+            {
+                var currency = await RpcClient.GetAssetBalancesAsync();
+                if (currency.Result.Any(c => c.AssetRef == MultiChainTools.VOTE_ASSET_NAME))
+                    return true;
+                attemps++;
+                await Task.Delay(delayMs);
+
+                Debug.WriteLine($"Attempt {attemps} failed to get Vote");
+            } while (attemps < maxAttempts);
+
+            return false;
         }
 
         #endregion
